@@ -1,0 +1,210 @@
+Initialising database...
+Database initialised successfully
+Seeding synthetic fallback data...
+Database initialised successfully
+Running live scrapers...
+=== Refresh cycle started at 2026-03-14T23:37:01.652469 ===
+[ta_routes] Starting scrape...
+Scraping TA routes from https://ta.org.jm/available-routes
+[ta_routes] Done — 0 records
+[ta_fares] Starting scrape...
+Scraping TA fares from https://ta.org.jm/routes-and-fares
+[ta_fares] Done — 0 records
+[jutc] Starting scrape...
+Scraping JUTC routes
+JUTC live scrape failed (404 Client Error: Not Found for url: https://jutc.gov.jm/routes), using known routes fallback
+[jutc] Done — 13 records
+[weather] Starting scrape...
+Scraping weather from https://metservice.gov.jm/forecasts
+[weather] Done — 1 records
+[traffic] Starting scrape...
+Scraping live traffic from Google Maps
+Maps API status: REQUEST_DENIED for Washington Blvd (HWT to Portmore)
+Maps API status: REQUEST_DENIED for Constant Spring Road
+Maps API status: REQUEST_DENIED for Spanish Town Road
+Maps API status: REQUEST_DENIED for Dunrobin Ave / Maxfield Ave
+Maps API status: REQUEST_DENIED for Old Hope Road
+Maps API status: REQUEST_DENIED for Barbican Road
+Maps API status: REQUEST_DENIED for Portmore to Downtown Kingston
+Maps API status: REQUEST_DENIED for Gregory Park (Portmore)
+Maps API status: REQUEST_DENIED for Stony Hill to Downtown
+Maps API status: REQUEST_DENIED for Manor Park Corridor
+[traffic] Done — 0 records
+[ml_predictions] Starting scrape...
+Pushing 36 routes through ML API (hour=18, day=Sat)
+[ml_predictions] Done — 13 records
+=== Refresh cycle complete — 27 records in 169.7s | ta_routes:0 | ta_fares:0 | jutc:13 | weather:1 | traffic:0 | ml_predictions:13 ===
+Scheduler starting — refresh every 15 minutes
+Scheduler thread started
+=== Refresh cycle started at 2026-03-14T23:39:51.776504 ===
+Background scheduler started (15-min refresh)
+[ta_routes] Starting scrape...
+Scraping TA routes from https://ta.org.jm/available-routes
+TransIQ Data API running at http://0.0.0.0:5050
+Endpoints: /api/health  /api/routes  /api/fares  /api/traffic  /api/weather  /api/hubs  /api/predictions  POST /api/plan
+[ta_routes] Done — 0 records
+[ta_fares] Starting scrape...
+Scraping TA fares from https://ta.org.jm/routes-and-fares
+[ta_fares] Done — 0 records
+[jutc] Starting scrape...
+Scraping JUTC routes
+JUTC live scrape failed (404 Client Error: Not Found for url: https://jutc.gov.jm/routes), using known routes fallback
+[jutc] Done — 13 records
+[weather] Starting scrape...
+Scraping weather from https://metservice.gov.jm/forecasts
+[weather] Done — 1 records
+[traffic] Starting scrape...
+Scraping live traffic from Google Maps
+Maps API status: REQUEST_DENIED for Washington Blvd (HWT to Portmore)
+Maps API status: REQUEST_DENIED for Constant Spring Road
+Maps API status: REQUEST_DENIED for Spanish Town Road
+Maps API status: REQUEST_DENIED for Dunrobin Ave / Maxfield Ave
+Maps API status: REQUEST_DENIED for Old Hope Road
+Maps API status: REQUEST_DENIED for Barbican Road
+Maps API status: REQUEST_DENIED for Portmore to Downtown Kingston
+Maps API status: REQUEST_DENIED for Gregory Park (Portmore)
+Maps API status: REQUEST_DENIED for Stony Hill to Downtown
+Maps API status: REQUEST_DENIED for Manor Park Corridor
+[traffic] Done — 0 records
+[ml_predictions] Starting scrape...
+Pushing 36 routes through ML API (hour=18, day=Sat)
+[ml_predictions] Done — 0 records
+=== Refresh cycle complete — 14 records in 132.1s | ta_routes:0 | ta_fares:0 | jutc:13 | weather:1 | traffic:0 | ml_predictions:0 ===
+Next refresh in 15 minutes...
+Initialising database...
+Database initialised successfully
+Seeding synthetic fallback data...
+Database initialised successfully
+Running live scrapers...
+=== Refresh cycle started at 2026-03-14T23:56:51.241674 ===
+[ta_routes] Starting scrape...
+Scraping TA routes from https://ta.org.jm/available-routes
+[ta_routes] Done — 0 records
+[ta_fares] Starting scrape...
+Scraping TA fares from https://ta.org.jm/routes-and-fares
+[ta_fares] Done — 0 records
+[jutc] Starting scrape...
+Scraping JUTC routes
+JUTC live scrape failed (404 Client Error: Not Found for url: https://jutc.gov.jm/routes), using known routes fallback
+[jutc] Done — 13 records
+[weather] Starting scrape...
+Scraping weather from https://metservice.gov.jm/forecasts
+[weather] Done — 1 records
+[traffic] Starting scrape...
+Scraping live traffic from Google Maps
+Maps API status: REQUEST_DENIED for Washington Blvd (HWT to Portmore)
+Maps API status: REQUEST_DENIED for Constant Spring Road
+Maps API status: REQUEST_DENIED for Spanish Town Road
+Maps API status: REQUEST_DENIED for Dunrobin Ave / Maxfield Ave
+Maps API status: REQUEST_DENIED for Old Hope Road
+Maps API status: REQUEST_DENIED for Barbican Road
+Maps API status: REQUEST_DENIED for Portmore to Downtown Kingston
+Maps API status: REQUEST_DENIED for Gregory Park (Portmore)
+Maps API status: REQUEST_DENIED for Stony Hill to Downtown
+=== Refresh cycle started at 2026-03-14T23:57:05.346625 ===
+[ta_routes] Starting scrape...
+Scraping TA routes from https://ta.org.jm/available-routes
+[ta_routes] Done — 0 records
+[ta_fares] Starting scrape...
+Scraping TA fares from https://ta.org.jm/routes-and-fares
+Maps API status: REQUEST_DENIED for Manor Park Corridor
+[traffic] Done — 0 records
+[ml_predictions] Starting scrape...
+Pushing 36 routes through ML API (hour=18, day=Sat)
+[ta_fares] Done — 0 records
+[jutc] Starting scrape...
+Scraping JUTC routes
+JUTC live scrape failed (404 Client Error: Not Found for url: https://jutc.gov.jm/routes), using known routes fallback
+[jutc] Done — 13 records
+[weather] Starting scrape...
+Scraping weather from https://metservice.gov.jm/forecasts
+[weather] Done — 1 records
+[traffic] Starting scrape...
+Scraping live traffic from Google Maps
+Maps API status: REQUEST_DENIED for Washington Blvd (HWT to Portmore)
+Maps API status: REQUEST_DENIED for Constant Spring Road
+Maps API status: REQUEST_DENIED for Spanish Town Road
+Maps API status: REQUEST_DENIED for Dunrobin Ave / Maxfield Ave
+Maps API status: REQUEST_DENIED for Old Hope Road
+Maps API status: REQUEST_DENIED for Barbican Road
+Maps API status: REQUEST_DENIED for Portmore to Downtown Kingston
+Maps API status: REQUEST_DENIED for Gregory Park (Portmore)
+Maps API status: REQUEST_DENIED for Stony Hill to Downtown
+Maps API status: REQUEST_DENIED for Manor Park Corridor
+[traffic] Done — 0 records
+[ml_predictions] Starting scrape...
+Pushing 36 routes through ML API (hour=18, day=Sat)
+[ml_predictions] Done — 34 records
+=== Refresh cycle complete — 48 records in 129.1s | ta_routes:0 | ta_fares:0 | jutc:13 | weather:1 | traffic:0 | ml_predictions:34 ===
+Scheduler starting — refresh every 15 minutes
+Scheduler thread started
+=== Refresh cycle started at 2026-03-14T23:59:00.342677 ===
+[ta_routes] Starting scrape...
+Scraping TA routes from https://ta.org.jm/available-routes
+Background scheduler started (15-min refresh)
+TransIQ Data API running at http://0.0.0.0:5050
+Endpoints: /api/health  /api/routes  /api/fares  /api/traffic  /api/weather  /api/hubs  /api/predictions  POST /api/plan
+[ta_routes] Done — 0 records
+[ta_fares] Starting scrape...
+Scraping TA fares from https://ta.org.jm/routes-and-fares
+[ta_fares] Done — 0 records
+[jutc] Starting scrape...
+Scraping JUTC routes
+JUTC live scrape failed (404 Client Error: Not Found for url: https://jutc.gov.jm/routes), using known routes fallback
+[jutc] Done — 13 records
+[weather] Starting scrape...
+Scraping weather from https://metservice.gov.jm/forecasts
+[weather] Done — 1 records
+[traffic] Starting scrape...
+Scraping live traffic from Google Maps
+Maps API status: REQUEST_DENIED for Washington Blvd (HWT to Portmore)
+Maps API status: REQUEST_DENIED for Constant Spring Road
+Maps API status: REQUEST_DENIED for Spanish Town Road
+Maps API status: REQUEST_DENIED for Dunrobin Ave / Maxfield Ave
+Maps API status: REQUEST_DENIED for Old Hope Road
+[ml_predictions] Done — 34 records
+=== Refresh cycle complete — 48 records in 124.3s | ta_routes:0 | ta_fares:0 | jutc:13 | weather:1 | traffic:0 | ml_predictions:34 ===
+Next refresh in 15 minutes...
+Maps API status: REQUEST_DENIED for Barbican Road
+Maps API status: REQUEST_DENIED for Portmore to Downtown Kingston
+Maps API status: REQUEST_DENIED for Gregory Park (Portmore)
+Maps API status: REQUEST_DENIED for Stony Hill to Downtown
+Maps API status: REQUEST_DENIED for Manor Park Corridor
+[traffic] Done — 0 records
+[ml_predictions] Starting scrape...
+Pushing 36 routes through ML API (hour=18, day=Sat)
+[ml_predictions] Done — 36 records
+=== Refresh cycle complete — 50 records in 95.1s | ta_routes:0 | ta_fares:0 | jutc:13 | weather:1 | traffic:0 | ml_predictions:36 ===
+Next refresh in 15 minutes...
+=== Refresh cycle started at 2026-03-15T00:14:09.640880 ===
+[ta_routes] Starting scrape...
+Scraping TA routes from https://ta.org.jm/available-routes
+[ta_routes] Done — 0 records
+[ta_fares] Starting scrape...
+Scraping TA fares from https://ta.org.jm/routes-and-fares
+[ta_fares] Done — 0 records
+[jutc] Starting scrape...
+Scraping JUTC routes
+JUTC live scrape failed (404 Client Error: Not Found for url: https://jutc.gov.jm/routes), using known routes fallback
+[jutc] Done — 13 records
+[weather] Starting scrape...
+Scraping weather from https://metservice.gov.jm/forecasts
+[weather] Done — 1 records
+[traffic] Starting scrape...
+Scraping live traffic from Google Maps
+Maps API status: REQUEST_DENIED for Washington Blvd (HWT to Portmore)
+Maps API status: REQUEST_DENIED for Constant Spring Road
+Maps API status: REQUEST_DENIED for Spanish Town Road
+Maps API status: REQUEST_DENIED for Dunrobin Ave / Maxfield Ave
+Maps API status: REQUEST_DENIED for Old Hope Road
+Maps API status: REQUEST_DENIED for Barbican Road
+Maps API status: REQUEST_DENIED for Portmore to Downtown Kingston
+Maps API status: REQUEST_DENIED for Gregory Park (Portmore)
+Maps API status: REQUEST_DENIED for Stony Hill to Downtown
+Maps API status: REQUEST_DENIED for Manor Park Corridor
+[traffic] Done — 0 records
+[ml_predictions] Starting scrape...
+Pushing 36 routes through ML API (hour=19, day=Sat)
+[ml_predictions] Done — 0 records
+=== Refresh cycle complete — 14 records in 65.8s | ta_routes:0 | ta_fares:0 | jutc:13 | weather:1 | traffic:0 | ml_predictions:0 ===
+Next refresh in 15 minutes...

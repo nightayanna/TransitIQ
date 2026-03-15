@@ -1,0 +1,22 @@
+# TransIQ Data Pipeline — Jodel's Module
+# Install: pip install -r requirements.txt
+
+# Core scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Database
+psycopg2-binary>=2.9.0   # PostgreSQL (production). Falls back to built-in sqlite3 if not installed.
+
+# Scheduling
+APScheduler>=3.10.0      # Alternative scheduler (optional — we use threading.Timer by default)
+
+# Kafka (optional — only needed if Kafka is running)
+kafka-python>=2.0.0
+
+# Env vars
+python-dotenv>=1.0.0
+
+# Dev/testing
+pytest>=7.4.0

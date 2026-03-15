@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JaTravelSafe — Jamaica Safety Navigator</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--bg2:#0d1220;--bg3:#111828;
+  --border:rgba(255,255,255,0.07);
+  --text:#dde6f4;--muted:#4a5870;--accent:#3dd68c;
+  --low:#3dd68c;--med:#f5c030;--high:#ff8030;--crit:#ff3838;
+  --fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);font-size:14px}
+
+/* ── LAYOUT ── */
+#app{display:grid;grid-template-rows:56px 1fr;height:100vh;min-height:600px}
+#main{display:grid;grid-template-columns:1fr 330px;overflow:hidden}
+
+/* ── HEADER ── */
+#hdr{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:14px;
+  z-index:1000;position:relative;
+}
+.logo{display:flex;align-items:center;gap:9px}
+.pulse{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,214,140,.5)}70%{box-shadow:0 0 0 8px rgba(61,214,140,0)}100%{box-shadow:0 0 0 0 rgba(61,214,140,0)}}
+.logo-name{font-family:var(--fh);font-size:15px;font-weight:800;color:var(--accent);letter-spacing:.5px}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.hdr-search{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:22px;padding:5px 13px;flex:1;max-width:320px
+}
+.hdr-search input{background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:var(--fb);width:100%}
+.hdr-search input::placeholder{color:var(--muted)}
+.hdr-pills{display:flex;gap:6px}
+.hpill{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;font-family:var(--fm);color:var(--muted);
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:6px;padding:3px 9px
+}
+.hpill-dot{width:5px;height:5px;border-radius:50%}
+
+/* ── MAP ── */
+#map-wrap{position:relative;overflow:hidden}
+#map{width:100%;height:100%;z-index:1}
+
+/* Override Leaflet attribution to match dark theme */
+.leaflet-control-attribution{
+  background:rgba(7,9,15,0.85)!important;
+  color:#4a5870!important;font-size:9px!important;
+  border-radius:6px 0 0 0!important;
+  padding:3px 8px!important;
+}
+.leaflet-control-attribution a{color:var(--accent)!important}
+.leaflet-control-zoom{border:1px solid var(--border)!important}
+.leaflet-control-zoom a{
+  background:rgba(7,9,15,0.92)!important;
+  color:var(--text)!important;border-bottom:1px solid var(--border)!important;
+  font-size:16px!important;line-height:26px!important;
+}
+.leaflet-control-zoom a:hover{background:var(--bg2)!important}
+
+/* Layer toggle bar */
+.layer-bar{
+  position:absolute;top:12px;left:12px;
+  display:flex;gap:5px;z-index:500;
+}
+.lbtn{
+  background:rgba(7,9,15,.92);border:1px solid rgba(255,255,255,.14);
+  border-radius:6px;padding:5px 10px;font-size:10px;
+  font-family:var(--fm);color:var(--muted);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.lbtn:hover,.lbtn.on{background:var(--accent);color:#042C53;border-color:var(--accent)}
+
+/* OSM attribution badge */
+.osm-badge{
+  position:absolute;bottom:28px;left:12px;z-index:500;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(7,9,15,.88);border:1px solid rgba(255,255,255,.1);
+  border-radius:6px;padding:4px 10px;font-size:10px;font-family:var(--fm);color:var(--muted)
+}
+.osm-badge a{color:var(--accent);text-decoration:none}
+.osm-badge a:hover{text-decoration:underline}
+
+/* Custom Leaflet popup skin */
+.leaflet-popup-content-wrapper{
+  background:var(--bg2)!important;border:1px solid var(--border)!important;
+  border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.6)!important;
+  padding:0!important;
+}
+.leaflet-popup-content{margin:0!important;width:220px!important}
+.leaflet-popup-tip-container{display:none}
+.leaflet-popup-close-button{
+  color:var(--muted)!important;font-size:18px!important;
+  top:6px!important;right:8px!important;
+}
+.leaflet-popup-close-button:hover{color:var(--text)!important}
+
+.pop{padding:13px 14px;font-family:'DM Sans',sans-serif;color:#dde6f4}
+.pop-type{font-size:9px;color:#4a5870;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
+.pop-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:7px}
+.pop-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:2px 9px;border-radius:20px;font-size:10px;
+  font-family:'DM Mono',monospace;margin-bottom:7px
+}
+.pop-bdot{width:5px;height:5px;border-radius:50%}
+.pop-desc{font-size:11px;color:#7a8fa8;line-height:1.6;margin-bottom:7px}
+.pop-btn{
+  display:block;width:100%;
+  background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.3);
+  border-radius:6px;padding:6px 10px;
+  font-size:11px;color:#3dd68c;font-family:'DM Sans',sans-serif;
+  cursor:pointer;text-align:left;transition:all .15s;margin-top:2px
+}
+.pop-btn:hover{background:rgba(61,214,140,.2);border-color:rgba(61,214,140,.5)}
+
+/* ── SIDEBAR ── */
+#sb{background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{
+  flex:1;padding:9px 4px;font-size:10px;font-family:var(--fm);
+  text-align:center;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted);cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;transition:all .15s
+}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Detail */
+#detail{padding:14px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-y:auto;max-height:55vh}
+.dname{font-family:var(--fh);font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px}
+.dtype{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.rbadge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:10px;
+  font-family:var(--fm);font-weight:500;letter-spacing:.4px;
+  margin-bottom:10px;text-transform:uppercase
+}
+.rdot{width:5px;height:5px;border-radius:50%}
+.grow{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px}
+.gpct{font-family:var(--fm)}
+.gtrack{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.gfill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.sc{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;padding:6px 9px}
+.sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.sv{font-size:11px;font-weight:500;color:#b8c4d8;font-family:var(--fm)}
+.th{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.ti{display:flex;gap:6px;font-size:11px;color:#7a8fa8;line-height:1.6;margin-bottom:3px}
+.ta{color:var(--accent);flex-shrink:0}
+.hint{font-size:12px;color:var(--muted);text-align:center;padding:22px 12px;line-height:1.8}
+
+/* Lists */
+.scroll-list{flex:1;overflow-y:auto}
+.scroll-list::-webkit-scrollbar{width:3px}
+.scroll-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.sec-hdr{
+  padding:8px 14px 4px;
+  font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;
+  font-family:var(--fm);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.li{display:flex;align-items:center;gap:9px;padding:7px 14px;cursor:pointer;transition:background .12s}
+.li:hover,.li.on{background:rgba(255,255,255,.05)}
+.li-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.li-ico{font-size:13px;flex-shrink:0;width:18px;text-align:center}
+.li-name{font-size:12px;color:#b8c4d8;flex:1}
+.li-sub{font-size:10px;color:var(--muted)}
+.li-pct{font-size:11px;font-family:var(--fm);flex-shrink:0}
+
+/* Legend */
+#legend{padding:9px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.lbar{height:4px;border-radius:2px;background:linear-gradient(to right,var(--low),var(--med),var(--high),var(--crit));margin-bottom:4px}
+.llabels{display:flex;justify-content:space-between;font-size:9px;font-family:var(--fm)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<div id="hdr">
+  <div class="logo">
+    <div class="pulse"></div>
+    <div>
+      <div class="logo-name">JaTravelSafe</div>
+      <div class="logo-sub">Jamaica Safety Navigator</div>
+    </div>
+  </div>
+  <div class="hdr-search">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+      <circle cx="6.5" cy="6.5" r="5" stroke="#4a5870" stroke-width="1.5"/>
+      <path d="M10.5 10.5L14 14" stroke="#4a5870" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input type="text" placeholder="Search communities, hubs..." oninput="filterAll(this.value)"/>
+  </div>
+  <div class="hdr-pills">
+    <div class="hpill">
+      <div class="hpill-dot" style="background:#3dd68c"></div>
+      <span>OpenStreetMap</span>
+    </div>
+    <div class="hpill">
+      <div class="hpill-dot" style="background:#3dd68c"></div>
+      <span>Leaflet.js</span>
+    </div>
+    <div class="hpill">
+      <div class="hpill-dot" style="background:#3dd68c"></div>
+      <span>No API Key</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- MAP -->
+  <div id="map-wrap">
+    <div id="map"></div>
+
+    <!-- Layer toggles -->
+    <div class="layer-bar">
+      <button class="lbtn on"  id="btn-osm"    onclick="setTile('osm')">Streets</button>
+      <button class="lbtn"     id="btn-topo"   onclick="setTile('topo')">Terrain</button>
+      <button class="lbtn"     id="btn-dark"   onclick="setTile('dark')">Dark</button>
+      <button class="lbtn"     id="btn-sat"    onclick="setTile('sat')">Satellite</button>
+      <button class="lbtn on"  id="btn-comm"   onclick="toggleLayer('comm')">Communities</button>
+      <button class="lbtn on"  id="btn-hubs"   onclick="toggleLayer('hubs')">Transport</button>
+    </div>
+
+    <!-- OSM credit badge -->
+    <div class="osm-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="#4a5870" stroke-width="1.5"/>
+        <path d="M12 8v4M12 16h.01" stroke="#4a5870" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Map data © <a href="https://openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sb">
+    <div id="tabs">
+      <button class="tab on" id="tab-detail"  onclick="showTab('detail')">Info</button>
+      <button class="tab"    id="tab-comm"    onclick="showTab('comm')">Communities</button>
+      <button class="tab"    id="tab-hubs"    onclick="showTab('hubs')">Transport</button>
+    </div>
+
+    <!-- INFO PANE -->
+    <div id="pane-detail">
+      <div id="detail">
+        <div id="detail-inner">
+          <div class="hint">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 12px">
+              <circle cx="12" cy="12" r="10" stroke="#1e3048" stroke-width="1.5"/>
+              <path d="M12 8v4M12 16h.01" stroke="#2a4060" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Tap any marker on the map to see real-time safety info for that community or transport hub.
+            <br/><br/>
+            <span style="color:#3dd68c;font-size:11px">Powered by OpenStreetMap — 100% free, no API key required.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMUNITIES PANE -->
+    <div id="pane-comm" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+      <div id="comm-list" class="scroll-list"></div>
+    </div>
+
+    <!-- HUBS PANE -->
+    <div id="pane-hubs" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+      <div id="hub-list" class="scroll-list"></div>
+    </div>
+
+    <div id="legend">
+      <div class="lbar"></div>
+      <div class="llabels">
+        <span style="color:var(--low)">Low</span>
+        <span style="color:var(--med)">Moderate</span>
+        <span style="color:var(--high)">High</span>
+        <span style="color:var(--crit)">Critical</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ════════════════════════════════════════════
+   DATA — DANGER COMMUNITIES
+   Sources: US/UK/Canada travel advisories,
+   Jamaica Constabulary Force, Jamaica Observer,
+   World Nomads, Global Guardian 2024-2025
+════════════════════════════════════════════ */
+const COMMUNITIES = [
+  /* ── KINGSTON / ST. ANDREW ── */
+  {id:'tivoli',      name:'Tivoli Gardens',      area:'West Kingston',     parish:'Kingston',    danger:94, lat:17.9985, lng:-76.8255, type:'community',
+   desc:'Most notorious gang stronghold in Jamaica. Former Shower Posse base. Site of 2010 military incursion. US Embassy staff prohibited from entering.',
+   tips:['Level 4 — Do not enter under any circumstances','No-go zone for all tourists and visitors','US Embassy staff explicitly prohibited from entering']},
+  {id:'trenchtown',  name:'Trench Town',          area:'West Kingston',     parish:'Kingston',    danger:88, lat:18.0030, lng:-76.8320, type:'community',
+   desc:'Birthplace of reggae and Bob Marley, but plagued by gang violence and drug trafficking. Cultural Yard Museum is accessible via registered guided tours only.',
+   tips:['Never visit without a registered licensed guide','Culture Yard Museum offers safe guided access','Avoid at all times without a tour escort']},
+  {id:'arnett',      name:'Arnett Gardens',       area:'South Kingston',    parish:'Kingston',    danger:86, lat:17.9975, lng:-76.8050, type:'community',
+   desc:'Known locally as "the Jungle". High gang activity and shootings. Schools have closed repeatedly due to gang violence spilling into the community.',
+   tips:['Avoid entirely — no tourist purpose here','Schools affected by gang crossfire repeatedly','No safe time of day to visit']},
+  {id:'denham',      name:'Denham Town',          area:'West Kingston',     parish:'Kingston',    danger:85, lat:18.0010, lng:-76.8190, type:'community',
+   desc:'Inner-city community with intense gang presence and drug trafficking activity. Site of multiple six-hour gun battles between gangs and police.',
+   tips:['Do not enter','Adjacent to Tivoli Gardens — equally dangerous','Avoid the entire West Kingston corridor']},
+  {id:'mountainview',name:'Mountain View Avenue', area:'East Kingston',     parish:'Kingston',    danger:82, lat:18.0095, lng:-76.7530, type:'community',
+   desc:'Controlled by violent gangs. Canadian Government advisory explicitly warns against using this road when travelling to or from the airport.',
+   tips:['Avoid this route entirely — use South Camp Road instead','Armed robbery incidents documented on this corridor','Active gang territory throughout']},
+  {id:'cassavapiece',name:'Cassava Piece',         area:'St. Andrew',        parish:'St. Andrew',  danger:80, lat:18.0530, lng:-76.7750, type:'community',
+   desc:'"Uptown ghetto" bordered by Constant Spring Gully. Frequent police curfews enforced. Criminal gang operations within boundaries. Drug trafficking hub.',
+   tips:['Police curfews enforced regularly without notice','Avoid Constant Spring Gully area entirely','High drug trafficking activity']},
+  {id:'grants_pen',  name:"Grant's Pen",          area:'St. Andrew',        parish:'St. Andrew',  danger:78, lat:18.0350, lng:-76.7680, type:'community',
+   desc:'Consistently flagged by US, UK, and Canada travel advisories. High crime rates. Many holiday rentals inadvertently located near this area.',
+   tips:['Check if your accommodation borders this zone','Never use public transport in this area','Avoid at all hours — day and night']},
+  {id:'august_town', name:'August Town',          area:'St. Andrew',        parish:'St. Andrew',  danger:72, lat:18.0270, lng:-76.7430, type:'community',
+   desc:'Recurring gang violence. UK and Canada flag as caution zone. UWI campus nearby provides some daytime activity buffer.',
+   tips:['Avoid inner streets of the community','UWI campus vicinity is relatively safer','Do not visit at night under any circumstances']},
+  {id:'rockfort',    name:'Rockfort',             area:'East Kingston',     parish:'Kingston',    danger:70, lat:17.9970, lng:-76.7580, type:'community',
+   desc:'Gang-controlled area near Kingston\'s industrial belt. No tourist attractions. Visitors advised by US State Dept to avoid.',
+   tips:['No tourist purpose','Avoid surrounding industrial roads at night','Use registered transportation only if passing through']},
+  {id:'harbour_view',name:'Harbour View',         area:'East Kingston',     parish:'Kingston',    danger:67, lat:17.9720, lng:-76.7270, type:'community',
+   desc:'British and Canadian government advisories flag this area for criminal activity and road robberies — particularly concerning for those driving to the airport.',
+   tips:['Caution advised on road to/from Norman Manley Airport','Lock vehicle doors and keep windows up','Avoid stopping here']},
+
+  /* ── MONTEGO BAY / ST. JAMES ── */
+  {id:'flankers',    name:'Flankers',             area:'Montego Bay',       parish:'St. James',   danger:91, lat:18.5010, lng:-77.9200, type:'community',
+   desc:'One of Jamaica\'s most dangerous neighbourhoods. Extreme poverty, persistent gang shootings. Just 2km from tourist resort corridor. No visitor purpose.',
+   tips:['Do not enter on foot under any circumstances','No public transport should be used here','Only registered private taxis if you must pass through']},
+  {id:'norwood',     name:'Norwood',              area:'Montego Bay',       parish:'St. James',   danger:87, lat:18.5065, lng:-77.9050, type:'community',
+   desc:'Active ZOSO (Zone of Special Operations). Regular curfews. Lotto scam operations hub. Shootings and violent crime are common occurrences.',
+   tips:['ZOSO zone — heightened police presence, curfews without notice','Avoid completely — no safe reason to visit','Lotto scam operations widespread here']},
+  {id:'rose_heights',name:'Rose Heights',         area:'Montego Bay',       parish:'St. James',   danger:85, lat:18.5150, lng:-77.8900, type:'community',
+   desc:'Gang initiations, turf wars, and violence that targets non-gang civilians. Life-threatening for any tourist who enters.',
+   tips:['Life-threatening for tourists — no exceptions','Stay on the resort corridor at all times','No reason to visit under any circumstances']},
+  {id:'glendevon',   name:'Glendevon',            area:'Montego Bay',       parish:'St. James',   danger:84, lat:18.5100, lng:-77.8800, type:'community',
+   desc:'Extremely high murder rate. Innocent civilians shot in their homes. Site of the notorious Glendevon Primary School shooting incident.',
+   tips:['Avoid at all costs','Random violence against non-gang residents documented','Do not pass through even in a vehicle']},
+  {id:'salt_spring', name:'Salt Spring',          area:'Montego Bay',       parish:'St. James',   danger:83, lat:18.4900, lng:-77.8700, type:'community',
+   desc:'Very high murder rate. Random violence against civilians regardless of gang affiliation. Flagged by US State Dept.',
+   tips:['Avoid entirely','Random violent incidents documented','No safe time of day']},
+  {id:'canterbury',  name:'Canterbury',           area:'Montego Bay',       parish:'St. James',   danger:75, lat:18.4730, lng:-77.9080, type:'community',
+   desc:'1km from Montego Bay town centre. Pedestrian-only area considered a criminal haven. No murders since 2014 but locals call it a "time bomb".',
+   tips:['Do not walk through','Only 1km from the Hip Strip tourist area','Locals live in fear despite apparent quiet period']},
+  {id:'barrett_town',name:'Barrett Town',         area:'St. James',         parish:'St. James',   danger:70, lat:18.5230, lng:-77.8490, type:'community',
+   desc:'UK Government advisory specifically flags this area. Gang activity and violent crime. No tourist value.',
+   tips:['UK/Canada government designated caution zone','Avoid after dark especially','No tourist attractions present']},
+  {id:'clavers_st',  name:'Clavers Street',       area:'Downtown MoBay',    parish:'St. James',   danger:68, lat:18.4780, lng:-77.9150, type:'community',
+   desc:'Listed on US State Department travel advisory. Foot traffic and vendors mask underlying criminal activity. Pickpocketing and robbery common.',
+   tips:['US State Dept. no-go zone — listed explicitly','Pickpocketing and robbery common','Avoid in daylight and night']},
+
+  /* ── ST. CATHERINE ── */
+  {id:'spanish_town',name:'Spanish Town',         area:'St. Catherine',     parish:'St. Catherine',danger:89, lat:17.9990, lng:-76.9573, type:'community',
+   desc:'US State Dept: "Do Not Travel to Spanish Town. Violence and shootings occur regularly." Extortion capital of Jamaica.',
+   tips:['US State Dept. Level 4 — DO NOT TRAVEL','Regular shootings and gang confrontations','Pass through only if absolutely necessary, daylight only']},
+  {id:'portmore_inn',name:'Portmore (inner)',      area:'St. Catherine',     parish:'St. Catherine',danger:58, lat:17.9505, lng:-76.8890, type:'community',
+   desc:'Portmore outer suburbs are calmer, but specific inner streets have elevated gang activity. Dozens of unsafe neighbourhoods within the sprawl.',
+   tips:['Outer suburbs relatively safer for transit','Avoid unmarked inner streets entirely','Use main roads and well-lit routes only']},
+
+  /* ── WESTMORELAND ── */
+  {id:'savanna_inn', name:'Savanna-la-Mar (inner)',area:'Westmoreland',     parish:'Westmoreland', danger:65, lat:18.2175, lng:-78.1323, type:'community',
+   desc:'Inner-city sections have elevated crime. The coastal resort strip near Negril is significantly safer. Downtown at night carries real risk.',
+   tips:['Stick to the coastal resort strip (Negril area)','Avoid downtown after dark','Use only registered taxis']},
+
+  /* ── CLARENDON ── */
+  {id:'may_pen',     name:'May Pen (inner)',       area:'Clarendon',         parish:'Clarendon',   danger:72, lat:17.9658, lng:-77.2476, type:'community',
+   desc:'Clarendon Parish explicitly flagged by US State Dept. May Pen town centre has significant gang violence and drug trafficking routes.',
+   tips:['US advisory cautions against all of Clarendon Parish','Do not drive alone at night','Avoid inner-city streets in May Pen']},
+];
+
+/* ════════════════════════════════════════════
+   DATA — TRANSPORT HUBS
+   Sources: Airports Authority of Jamaica, Visit
+   Jamaica, Canada/US/UK advisories 2024-2025
+════════════════════════════════════════════ */
+const HUBS = [
+  /* ── AIRPORTS ── */
+  {id:'mbj',         name:'Sangster Intl Airport',       code:'MBJ', area:'Montego Bay',    parish:'St. James',    type:'airport', lat:18.5037, lng:-77.9133, danger:30,
+   desc:'Busiest airport in Jamaica and main tourism gateway. Airport itself is secure. Crime risk lies on roads and from unlicensed taxi operators outside the terminal.',
+   tips:['Use JUTA-licensed taxis only — red/white PP plates with lime-green sticker','Pre-book transfers through your resort','Avoid unmarked taxis — robbery risk outside terminal'],
+   services:['Caribbean Airlines, Delta, JetBlue, Southwest, United','VIP lounge, spa, duty free shopping','Knutsford Express bus stop nearby']},
+  {id:'kin',         name:'Norman Manley Intl Airport',  code:'KIN', area:'Kingston',       parish:'Kingston',     type:'airport', lat:17.9357, lng:-76.7875, danger:42,
+   desc:'Second busiest airport. Airport itself is secure. High-risk Mountain View Avenue corridor on approach — Canada advisory explicitly warns against this route.',
+   tips:['ALWAYS use South Camp Road (Hummingbird Route) — NOT Mountain View Avenue','Pre-book registered transport before arrival','Never drive to/from airport at night'],
+   services:['Caribbean Airlines hub','Primary business travel and cargo gateway','130+ international flights weekly']},
+  {id:'ocj',         name:'Ian Fleming Intl Airport',    code:'OCJ', area:'Ocho Rios',      parish:'St. Mary',     type:'airport', lat:18.4046, lng:-76.9695, danger:18,
+   desc:'Small regional airport in a low-crime area near Ocho Rios. Very safe for charter and resort transfers. Minutes from north coast resort corridor.',
+   tips:['Safest airport in Jamaica','Minutes from Ocho Rios resort hotels','Charter and private aviation hub'],
+   services:['Charter and private aviation','Close to north coast resort corridor','Regional Caribbean connections']},
+
+  /* ── CRUISE PORTS ── */
+  {id:'falmouth_pt', name:'Falmouth Cruise Port',        code:'—',  area:'Falmouth',        parish:'Trelawny',    type:'port',    lat:18.4965, lng:-77.6517, danger:22,
+   desc:'Modern secure cruise port in one of Jamaica\'s safer parishes. Lower danger than Montego Bay. Georgian town of Falmouth is generally safe during the day.',
+   tips:['Stay within organised shore excursions','Falmouth Georgian town safe by day','Use port-authorised transport for all excursions'],
+   services:['Royal Caribbean partner port','Shopping, water sports, walking tours','Green Grotto Caves and Cockpit Country accessible']},
+  {id:'mobay_pt',    name:'Montego Bay Cruise Port',     code:'—',  area:'Montego Bay',    parish:'St. James',    type:'port',    lat:18.4731, lng:-77.9227, danger:45,
+   desc:'Caribbean\'s most visited cruise port. Port area is secured, but dangerous communities begin within 2km. Stick to resort corridor between port and Hip Strip.',
+   tips:['Do not wander off the Hip Strip resort corridor','Avoid heading inland from port','Use only port-registered transport for excursions'],
+   services:['Carnival, MSC, Norwegian, Royal Caribbean','Water sports, duty free, Margaritaville','Hip Strip 10 minute walk']},
+  {id:'ochos_pt',    name:'Ocho Rios Cruise Port',       code:'—',  area:'Ocho Rios',      parish:'St. Ann',      type:'port',    lat:18.4076, lng:-77.1083, danger:28,
+   desc:'Reasonably safe for day trips. Port and main tourist corridor are secure. Stick to Dunn\'s River Falls and main attractions reachable directly from port.',
+   tips:['Watch for persistent vendors and hustlers on exits','Stick to tour operators from the port','Dunn\'s River Falls is safely accessible']},
+
+  /* ── BUS TERMINALS ── */
+  {id:'knutsford',   name:'Knutsford Express (Kingston)',code:'—',  area:'New Kingston',   parish:'Kingston',     type:'bus',     lat:18.0106, lng:-76.7893, danger:18,
+   desc:'Safest inter-city bus service in Jamaica. Air-conditioned coaches with CCTV cameras and GPS tracking. Strongly recommended over all local bus options.',
+   tips:['Best and safest inter-city transport option','Book ahead online: knutsfordexpress.com','Serves MoBay, Ocho Rios, Negril, Mandeville'],
+   services:['Kingston to Montego Bay (2.5hrs)','Kingston to Ocho Rios','Kingston to Negril','Air-conditioned, WiFi, CCTV-monitored']},
+  {id:'kin_bus',     name:'Kingston Bus Terminal',       code:'—',  area:'Downtown Kingston',parish:'Kingston',    type:'bus',     lat:17.9950, lng:-76.7920, danger:82,
+   desc:'High-risk downtown Kingston terminal. Canadian advisory explicitly warns public transport has high levels of crime and overcrowding. Avoid completely.',
+   tips:['Avoid local city buses — Canadian Government advisory warning','Use Knutsford Express for all inter-city travel','Robbery and pickpocketing common at this terminal'],
+   services:['Local JUTC city bus routes only','Dangerous environment — use as last resort','Knutsford Express terminal nearby (far safer)']},
+  {id:'mobay_bus',   name:'Montego Bay Bus Terminal',    code:'—',  area:'Downtown MoBay', parish:'St. James',    type:'bus',     lat:18.4760, lng:-77.9140, danger:72,
+   desc:'Local bus terminal near high-crime Clavers Street. Robbery and pickpocketing common. Use Knutsford Express or registered JUTA taxis instead.',
+   tips:['Avoid local bus terminal completely','Use Knutsford Express for inter-city travel','Robbery common at and around terminal'],
+   services:['Local JUTC city routes','High-risk environment','Knutsford Express strongly recommended']},
+
+  /* ── ROAD CORRIDORS ── */
+  {id:'a1_inland',   name:'A1 Highway (Inland Side)',    code:'A1', area:'Montego Bay',    parish:'St. James',    type:'road',    lat:18.4980, lng:-77.8950, danger:76,
+   desc:'US State Dept. advises against travel to all areas on the inland side of the A1 highway in Montego Bay. Flankers, Norwood, and Glendevon are directly accessed from here.',
+   tips:['Stay on the sea side of A1 — resort corridor only','Do not venture inland past Queen\'s Drive','Flankers, Norwood, Glendevon all sit on the inland side'],
+   services:[]},
+  {id:'mtview_rd',   name:'Mountain View Avenue',        code:'—',  area:'East Kingston',  parish:'Kingston',     type:'road',    lat:18.0050, lng:-76.7600, danger:80,
+   desc:'Canadian Government advisory explicitly warns against using this road from Norman Manley Airport. Multiple robbery incidents documented. Active gang territory.',
+   tips:['NEVER use this road to/from the airport','Use South Camp Road (Hummingbird Route) always','Active gang territory along entire corridor'],
+   services:[]},
+];
+
+/* ════════════════════════════════════════════
+   COLOUR + LEVEL HELPERS
+════════════════════════════════════════════ */
+function dCol(d){
+  if(d<40) return '#3dd68c';
+  if(d<60) return '#f5c030';
+  if(d<75) return '#ff8030';
+  return '#ff3838';
+}
+function rLvl(d){
+  if(d<40) return {l:'Low risk',      bg:'rgba(61,214,140,.15)',  c:'#3dd68c'};
+  if(d<60) return {l:'Moderate risk', bg:'rgba(245,192,48,.15)',  c:'#f5c030'};
+  if(d<75) return {l:'High risk',     bg:'rgba(255,128,48,.15)',  c:'#ff8030'};
+  return         {l:'Critical risk', bg:'rgba(255,56,56,.15)',   c:'#ff3838'};
+}
+function hubIco(t){return{airport:'✈',port:'⚓',bus:'🚌',road:'🛣'}[t]||'📍'}
+
+/* ════════════════════════════════════════════
+   CREATE LEAFLET CUSTOM ICONS
+════════════════════════════════════════════ */
+function commIcon(danger){
+  const c=dCol(danger);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" viewBox="0 0 40 50">
+    <circle cx="20" cy="20" r="16" fill="${c}" fill-opacity="0.2" stroke="${c}" stroke-width="1.8"/>
+    <circle cx="20" cy="20" r="9"  fill="${c}"/>
+    <line x1="20" y1="36" x2="20" y2="46" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="20" y="24" text-anchor="middle" font-size="8" font-family="DM Mono,monospace" fill="#07090f" font-weight="700">${danger}%</text>
+  </svg>`;
+  return L.divIcon({
+    html:svg, className:'', iconSize:[40,50], iconAnchor:[20,46], popupAnchor:[0,-46]
+  });
+}
+
+function hubIcon(type, danger){
+  const c=dCol(danger), ico=hubIco(type);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+    <rect x="4" y="4" width="36" height="36" rx="9" fill="${c}" fill-opacity="0.18" stroke="${c}" stroke-width="1.6"/>
+    <rect x="8" y="8" width="28" height="28" rx="7" fill="${c}" fill-opacity="0.32"/>
+    <text x="22" y="21" text-anchor="middle" dominant-baseline="middle" font-size="13" font-family="DM Sans,sans-serif">${ico}</text>
+    <text x="22" y="34" text-anchor="middle" font-size="8"  font-family="DM Mono,monospace" fill="${c}" font-weight="700">${danger}%</text>
+  </svg>`;
+  return L.divIcon({
+    html:svg, className:'', iconSize:[44,44], iconAnchor:[22,22], popupAnchor:[0,-22]
+  });
+}
+
+/* ════════════════════════════════════════════
+   POPUP HTML BUILDERS
+════════════════════════════════════════════ */
+function commPopup(c){
+  const lv=rLvl(c.danger), col=dCol(c.danger);
+  return `<div class="pop">
+    <div class="pop-type">Danger Community · ${c.parish}</div>
+    <div class="pop-name">${c.name}</div>
+    <div class="pop-badge" style="background:${lv.bg};color:${lv.c}">
+      <div class="pop-bdot" style="background:${lv.c}"></div>${lv.l} · ${c.danger}%
+    </div>
+    <div class="pop-desc">${c.desc.slice(0,110)}${c.desc.length>110?'…':''}</div>
+    <button class="pop-btn" onclick="selectItem('${c.id}','comm');showTab('detail')">View full safety details ↗</button>
+  </div>`;
+}
+
+function hubPopup(h){
+  const lv=rLvl(h.danger), col=dCol(h.danger);
+  return `<div class="pop">
+    <div class="pop-type">${h.type.charAt(0).toUpperCase()+h.type.slice(1)} Hub · ${h.parish}</div>
+    <div class="pop-name">${h.name}${h.code&&h.code!=='—'?' ('+h.code+')':''}</div>
+    <div class="pop-badge" style="background:${lv.bg};color:${lv.c}">
+      <div class="pop-bdot" style="background:${lv.c}"></div>${lv.l} · ${h.danger}%
+    </div>
+    <div class="pop-desc">${h.desc.slice(0,110)}${h.desc.length>110?'…':''}</div>
+    <button class="pop-btn" onclick="selectItem('${h.id}','hub');showTab('detail')">View full hub details ↗</button>
+  </div>`;
+}
+
+/* ════════════════════════════════════════════
+   TILE LAYERS
+════════════════════════════════════════════ */
+const TILES = {
+  osm:  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          {maxZoom:19, attribution:'© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'}),
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+          {maxZoom:17, attribution:'© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> | © <a href="https://opentopomap.org">OpenTopoMap</a>'}),
+  dark: L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+          {maxZoom:20, attribution:'© <a href="https://stadiamaps.com/">Stadia Maps</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'}),
+  sat:  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          {maxZoom:18, attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics'}),
+};
+
+let currentTile = 'osm';
+let commVisible  = true;
+let hubVisible   = true;
+let selId        = null;
+
+/* ════════════════════════════════════════════
+   INIT LEAFLET MAP
+════════════════════════════════════════════ */
+const map = L.map('map', {
+  center:[18.12, -77.32],
+  zoom:9,
+  zoomControl:true,
+  attributionControl:false  // we use our own attribution badge
+});
+
+TILES.osm.addTo(map);
+
+/* ── Marker layer groups ── */
+const commGroup = L.layerGroup().addTo(map);
+const hubGroup  = L.layerGroup().addTo(map);
+
+/* ── Plot community markers ── */
+COMMUNITIES.forEach(c=>{
+  const marker = L.marker([c.lat, c.lng], {icon: commIcon(c.danger)});
+  marker.bindPopup(commPopup(c), {maxWidth:240, className:'jtf-popup'});
+  marker.on('click', ()=>selectItem(c.id,'comm'));
+  marker.addTo(commGroup);
+  c._marker = marker;
+});
+
+/* ── Plot transport hub markers ── */
+HUBS.forEach(h=>{
+  const marker = L.marker([h.lat, h.lng], {icon: hubIcon(h.type, h.danger)});
+  marker.bindPopup(hubPopup(h), {maxWidth:240, className:'jtf-popup'});
+  marker.on('click', ()=>selectItem(h.id,'hub'));
+  marker.addTo(hubGroup);
+  h._marker = marker;
+});
+
+/* ════════════════════════════════════════════
+   TILE SWITCHER
+════════════════════════════════════════════ */
+function setTile(key){
+  TILES[currentTile].remove();
+  TILES[key].addTo(map);
+  TILES[key].bringToBack();
+  currentTile = key;
+  ['osm','topo','dark','sat'].forEach(k=>document.getElementById('btn-'+k).classList.remove('on'));
+  document.getElementById('btn-'+key).classList.add('on');
+}
+
+/* ════════════════════════════════════════════
+   LAYER TOGGLES
+════════════════════════════════════════════ */
+function toggleLayer(layer){
+  if(layer==='comm'){
+    commVisible=!commVisible;
+    commVisible ? commGroup.addTo(map) : commGroup.remove();
+    document.getElementById('btn-comm').classList.toggle('on',commVisible);
+  } else {
+    hubVisible=!hubVisible;
+    hubVisible ? hubGroup.addTo(map) : hubGroup.remove();
+    document.getElementById('btn-hubs').classList.toggle('on',hubVisible);
+  }
+}
+
+/* ════════════════════════════════════════════
+   SELECT + RENDER DETAIL
+════════════════════════════════════════════ */
+function selectItem(id, dataType){
+  selId=id;
+  const item = dataType==='comm'
+    ? COMMUNITIES.find(x=>x.id===id)
+    : HUBS.find(x=>x.id===id);
+  if(!item) return;
+
+  /* Highlight list item */
+  document.querySelectorAll('.li').forEach(el=>el.classList.remove('on'));
+  const li=document.querySelector(`.li[data-id="${id}"]`);
+  if(li){li.classList.add('on');li.scrollIntoView({block:'nearest'});}
+
+  /* Pan map */
+  map.panTo([item.lat, item.lng]);
+
+  renderDetail(item, dataType);
+}
+
+function renderDetail(item, dataType){
+  const lv=rLvl(item.danger), c=dCol(item.danger);
+  const isHub   = dataType==='hub';
+  const typeStr = isHub
+    ? hubIco(item.type)+' '+item.type.charAt(0).toUpperCase()+item.type.slice(1)+' Hub'
+    : '⚠ Danger Community';
+  const bodyTxt = isHub ? item.desc : item.desc;
+  const tips    = item.tips||[];
+  const svcHTML = isHub && item.services && item.services.length
+    ? `<div class="th" style="margin-top:6px">Services</div>${item.services.filter(Boolean).map(s=>`<div class="ti"><span class="ta">›</span><span>${s}</span></div>`).join('')}`
+    : '';
+
+  document.getElementById('detail-inner').innerHTML=`
+    <div class="dname">${item.name}${isHub && item.code && item.code!=='—' ? ' <span style="font-size:12px;color:var(--muted)">('+item.code+')</span>':''}</div>
+    <div class="dtype">${typeStr} · ${item.area}</div>
+    <div class="rbadge" style="background:${lv.bg};color:${lv.c}">
+      <div class="rdot" style="background:${lv.c}"></div>${lv.l}
+    </div>
+    <div class="grow"><span>Danger index</span><span class="gpct" style="color:${c}">${item.danger}%</span></div>
+    <div class="gtrack"><div class="gfill" style="width:${item.danger}%;background:${c}"></div></div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">Area</div><div class="sv">${item.area}</div></div>
+      <div class="sc"><div class="sl">Parish</div><div class="sv">${item.parish}</div></div>
+    </div>
+    <div class="th">Overview</div>
+    <div style="font-size:11px;color:#7a8fa8;line-height:1.65;margin-bottom:10px">${bodyTxt}</div>
+    <div class="th">Safety tips</div>
+    ${tips.map(t=>`<div class="ti"><span class="ta">›</span><span>${t}</span></div>`).join('')}
+    ${svcHTML}
+  `;
+
+  showTab('detail');
+}
+
+/* ════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════ */
+function showTab(t){
+  ['detail','comm','hubs'].forEach(id=>{
+    document.getElementById('tab-'+id).classList.remove('on');
+    document.getElementById('pane-'+id).style.display='none';
+  });
+  document.getElementById('tab-'+t).classList.add('on');
+  document.getElementById('pane-'+t).style.display=(t==='detail')?'block':'flex';
+}
+
+/* ════════════════════════════════════════════
+   BUILD SIDEBAR LISTS
+════════════════════════════════════════════ */
+function buildCommList(filter=''){
+  const el=document.getElementById('comm-list');
+  el.innerHTML='';
+  const groups={
+    'Kingston / St. Andrew': COMMUNITIES.filter(c=>['Kingston','St. Andrew'].includes(c.parish)),
+    'Montego Bay / St. James': COMMUNITIES.filter(c=>c.parish==='St. James'),
+    'St. Catherine': COMMUNITIES.filter(c=>c.parish==='St. Catherine'),
+    'Other Parishes': COMMUNITIES.filter(c=>!['Kingston','St. Andrew','St. James','St. Catherine'].includes(c.parish)),
+  };
+  Object.entries(groups).forEach(([gname,items])=>{
+    const f=items.filter(c=>
+      !filter||c.name.toLowerCase().includes(filter.toLowerCase())||c.area.toLowerCase().includes(filter.toLowerCase())
+    ).sort((a,b)=>b.danger-a.danger);
+    if(!f.length) return;
+    const hdr=document.createElement('div');
+    hdr.className='sec-hdr';
+    hdr.innerHTML=`<span>${gname}</span><span style="color:var(--crit)">${f.length}</span>`;
+    el.appendChild(hdr);
+    f.forEach(c=>{
+      const col=dCol(c.danger);
+      const d=document.createElement('div');
+      d.className='li'+(selId===c.id?' on':'');
+      d.setAttribute('data-id',c.id);
+      d.onclick=()=>{
+        selectItem(c.id,'comm');
+        if(c._marker){ c._marker.openPopup(); }
+      };
+      d.innerHTML=`<div class="li-dot" style="background:${col}"></div>
+        <div style="flex:1;min-width:0"><div class="li-name">${c.name}</div><div class="li-sub">${c.area}</div></div>
+        <div class="li-pct" style="color:${col}">${c.danger}%</div>`;
+      el.appendChild(d);
+    });
+  });
+}
+
+function buildHubList(filter=''){
+  const el=document.getElementById('hub-list');
+  el.innerHTML='';
+  const groups={
+    'Airports':        HUBS.filter(h=>h.type==='airport'),
+    'Cruise Ports':    HUBS.filter(h=>h.type==='port'),
+    'Bus Terminals':   HUBS.filter(h=>h.type==='bus'),
+    'Road Corridors':  HUBS.filter(h=>h.type==='road'),
+  };
+  Object.entries(groups).forEach(([gname,items])=>{
+    const f=items.filter(h=>
+      !filter||h.name.toLowerCase().includes(filter.toLowerCase())||h.area.toLowerCase().includes(filter.toLowerCase())
+    ).sort((a,b)=>b.danger-a.danger);
+    if(!f.length) return;
+    const hdr=document.createElement('div');
+    hdr.className='sec-hdr';
+    hdr.innerHTML=`<span>${hubIco(items[0].type)} ${gname}</span><span style="color:var(--muted)">${f.length}</span>`;
+    el.appendChild(hdr);
+    f.forEach(h=>{
+      const col=dCol(h.danger);
+      const d=document.createElement('div');
+      d.className='li'+(selId===h.id?' on':'');
+      d.setAttribute('data-id',h.id);
+      d.onclick=()=>{
+        selectItem(h.id,'hub');
+        if(h._marker){ h._marker.openPopup(); }
+      };
+      d.innerHTML=`<div class="li-ico">${hubIco(h.type)}</div>
+        <div style="flex:1;min-width:0"><div class="li-name">${h.name}</div><div class="li-sub">${h.area}</div></div>
+        <div class="li-pct" style="color:${col}">${h.danger}%</div>`;
+      el.appendChild(d);
+    });
+  });
+}
+
+function filterAll(q){
+  buildCommList(q);
+  buildHubList(q);
+}
+
+/* ════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════ */
+buildCommList();
+buildHubList();
+
+/* Fit map to Jamaica bounding box on load */
+map.fitBounds([[17.70, -78.40],[18.55,-76.18]]);
+</script>
+</body>
+</html>

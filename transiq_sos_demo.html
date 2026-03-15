@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TransIQ SOS — Full Stack Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080a0f; --bg2: #0e1018; --bg3: #141720; --bg4: #1c1f2b;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #e8eaf0; --text2: #7a7e96; --text3: #454860;
+  --red: #FF3B30; --red-dim: rgba(255,59,48,0.10);
+  --green: #34C759; --green-dim: rgba(52,199,89,0.08);
+  --blue: #4A8FE7; --blue-dim: rgba(74,143,231,0.08);
+  --amber: #FF9500; --amber-dim: rgba(255,149,0,0.08);
+  --wa: #25D366;
+  --font: 'Syne', sans-serif;
+  --mono: 'Space Mono', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* Subtle noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* Grid lines background */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(74,143,231,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,143,231,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+header {
+  width: 100%;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(8,10,15,0.92);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(16px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-mark {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255,59,48,0.35);
+  font-family: var(--font);
+}
+
+.logo-text { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+.logo-sub  { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 1px; }
+
+.header-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hbadge {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 0.5px solid var(--border2);
+  color: var(--text3);
+  background: var(--bg2);
+  font-family: var(--mono);
+}
+
+.hbadge.live {
+  border-color: rgba(52,199,89,0.3);
+  color: var(--green);
+  background: var(--green-dim);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* MAIN GRID */
+main {
+  width: 100%;
+  max-width: 1300px;
+  padding: 24px 24px 64px;
+  display: grid;
+  grid-template-columns: 290px 240px 1fr;
+  gap: 16px;
+  align-items: start;
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════
+   PHONE COLUMN
+══════════════════════════════ */
+.phone-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 80px;
+}
+
+.phone-wrap { position: relative; }
+
+.side-btn {
+  position: absolute;
+  left: -7px;
+  width: 5px;
+  border-radius: 3px 0 0 3px;
+  background: #1a1d2a;
+  cursor: pointer;
+  transition: background .12s;
+  border: 0.5px solid rgba(255,255,255,0.05);
+}
+.side-btn:hover { background: #2a2d3e; }
+.side-btn.flash { background: var(--blue) !important; box-shadow: 0 0 6px var(--blue); }
+
+.screen {
+  position: relative;
+  width: 290px;
+  height: 580px;
+  background: #0d0f18;
+  border-radius: 44px;
+  overflow: hidden;
+  border: 1.5px solid #1e2130;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 32px 80px rgba(0,0,0,0.85),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* MAP */
+.map-bg {
+  position: absolute;
+  inset: 0;
+  background: #0e1420;
+  overflow: hidden;
+}
+
+.map-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(rgba(74,143,231,0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,143,231,0.6) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.map-road { position: absolute; background: rgba(255,255,255,0.05); }
+.map-road.lit { background: rgba(255,200,100,0.06); }
+.map-block { position: absolute; border-radius: 3px; background: rgba(74,143,231,0.03); border: 0.5px solid rgba(74,143,231,0.06); }
+
+.route-line {
+  position: absolute;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(52,199,89,0.6), rgba(52,199,89,0.2));
+  animation: routePulse 3s ease-in-out infinite;
+}
+
+@keyframes routePulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.loc-pin {
+  position: absolute;
+  left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  filter: drop-shadow(0 3px 10px rgba(255,59,48,0.6));
+  animation: mapFloat 3s ease-in-out infinite;
+  z-index: 20;
+}
+
+.acc-ring {
+  position: absolute;
+  left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: rgba(255,59,48,0.06);
+  border: 1px solid rgba(255,59,48,0.15);
+  animation: accPulse 3s ease-in-out infinite;
+  z-index: 10;
+}
+
+.acc-ring-2 {
+  position: absolute;
+  left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: transparent;
+  border: 0.5px solid rgba(255,59,48,0.07);
+  animation: accPulse2 3s ease-in-out infinite;
+  z-index: 9;
+}
+
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+}
+
+.s-time { font-size: 14px; font-weight: 700; color: #fff; font-family: var(--mono); }
+.s-icons { font-size: 11px; color: rgba(255,255,255,0.6); display: flex; gap: 5px; align-items: center; }
+
+.trip-pill {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(14px);
+  border: 0.5px solid rgba(255,255,255,0.09);
+  border-radius: 20px;
+  padding: 5px 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 50;
+  white-space: nowrap;
+}
+
+.trip-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: tripBlink 2s ease-in-out infinite;
+}
+
+.trip-text { color: rgba(255,255,255,0.75); font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+
+/* Off-route alert */
+.offroute-bar {
+  position: absolute;
+  top: 92px;
+  left: 14px; right: 14px;
+  background: rgba(255,149,0,0.15);
+  border: 0.5px solid rgba(255,149,0,0.35);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 10px;
+  color: var(--amber);
+  font-weight: 600;
+  z-index: 60;
+  display: none;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* LOCKED pill */
+.sos-locked-overlay {
+  position: absolute;
+  bottom: 60px; left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 300;
+}
+
+.sos-locked-pill {
+  background: rgba(255,149,0,0.12);
+  border: 0.5px solid rgba(255,149,0,0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 10px;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.hint-box {
+  position: absolute;
+  bottom: 94px; right: 96px;
+  text-align: right;
+  transition: opacity .4s;
+  z-index: 50;
+}
+.hint-line { color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; line-height: 1.9; font-family: var(--mono); }
+
+/* SOS button */
+.sos-wrap {
+  position: absolute;
+  bottom: 80px; right: 18px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sos-ring {
+  position: absolute;
+  width: 82px; height: 82px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,59,48,0.2);
+  pointer-events: none;
+}
+
+.sos-ring.idle  { animation: ringGrow 2.4s ease-out infinite; }
+.sos-ring.locked { border-color: rgba(255,149,0,0.2); }
+
+.sos-arc {
+  position: absolute;
+  width: 82px; height: 82px;
+  pointer-events: none;
+  transform: rotate(-90deg);
+}
+
+.sos-btn {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--red);
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1.5px;
+  font-family: var(--font);
+  transition: transform .1s, background .3s;
+  box-shadow: 0 4px 24px rgba(255,59,48,0.5), 0 0 0 3px rgba(255,59,48,0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.sos-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.18), transparent 60%);
+  border-radius: 50%;
+}
+
+.sos-btn:active { transform: scale(0.93); }
+.sos-btn.idle   { animation: sosPulse 2.2s ease-in-out infinite; }
+.sos-btn.locked { background: #2a2d3e; box-shadow: none; cursor: not-allowed; animation: none; }
+.sos-btn.sending { animation: spin 0.9s linear infinite; }
+.sos-btn.sent    { background: var(--green); box-shadow: 0 4px 24px rgba(52,199,89,0.5); animation: none; }
+.sos-btn.error   { background: var(--amber); animation: none; }
+
+/* Modals */
+.m-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s;
+  backdrop-filter: blur(6px);
+}
+
+.m-overlay.show { opacity: 1; pointer-events: all; }
+
+.m-card {
+  background: #1a1c28;
+  border-radius: 22px;
+  padding: 26px 22px;
+  width: 244px;
+  text-align: center;
+  border: 1px solid rgba(255,59,48,0.25);
+  animation: fadeUp .28s ease;
+  box-shadow: 0 24px 50px rgba(0,0,0,0.7);
+}
+
+.m-card.c-sent { border-color: rgba(52,199,89,0.25); }
+.m-card.c-err  { border-color: rgba(255,149,0,0.25); }
+
+.m-title { color: var(--red); font-size: 14px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.2px; }
+.m-num   { color: #fff; font-size: 64px; font-weight: 800; line-height: 1; margin-bottom: 4px; font-family: var(--mono); }
+.m-num.pop { animation: countPop 0.3s ease; }
+.m-sub   { color: rgba(255,255,255,0.4); font-size: 11px; margin-bottom: 20px; line-height: 1.6; font-family: var(--mono); }
+
+.m-cancel {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: 12px;
+  padding: 11px 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  font-family: var(--font);
+  transition: background .15s;
+}
+
+.m-cancel:hover { background: rgba(255,255,255,0.14); }
+.m-icon { font-size: 38px; margin-bottom: 10px; display: block; }
+.m-ttl  { color: #fff; font-size: 18px; font-weight: 800; margin-bottom: 7px; }
+.m-body { color: rgba(255,255,255,0.45); font-size: 11px; line-height: 1.75; font-family: var(--mono); }
+
+/* ══════════════════════════════
+   CONTROLS COLUMN
+══════════════════════════════ */
+.ctrl-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctrl-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.sec-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+
+.c-btn {
+  width: 100%;
+  padding: 9px 10px;
+  border: 0.5px solid var(--border2);
+  border-radius: 9px;
+  background: var(--bg3);
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  transition: background .14s, transform .1s;
+  font-family: var(--font);
+  font-weight: 600;
+}
+
+.c-btn:hover { background: var(--bg4); }
+.c-btn:active { transform: scale(0.97); }
+.c-btn.red   { border-color: rgba(255,59,48,0.22); color: #ff7068; }
+.c-btn.red:hover   { background: var(--red-dim); }
+.c-btn.blue  { border-color: rgba(74,143,231,0.22); color: #6da6f0; }
+.c-btn.blue:hover  { background: var(--blue-dim); }
+.c-btn.grn   { border-color: rgba(52,199,89,0.22); color: #4ad97a; }
+.c-btn.grn:hover   { background: var(--green-dim); }
+.c-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--bg4);
+  border: 0.5px solid var(--border2);
+  transition: all .14s;
+}
+
+.dot.on {
+  background: var(--red);
+  border-color: rgba(255,59,48,0.5);
+  transform: scale(1.35);
+  box-shadow: 0 0 6px rgba(255,59,48,0.45);
+}
+
+.bar-track { flex: 1; height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 2px; transition: width .05s linear; }
+
+.kbd {
+  background: var(--bg3);
+  border: 0.5px solid var(--border2);
+  border-radius: 5px;
+  padding: 1px 7px;
+  font-size: 10px;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-weight: 700;
+  border: 0.5px solid var(--border2);
+  transition: all .2s;
+  font-family: var(--mono);
+}
+
+.badge-idle    { background: var(--bg3); color: var(--text2); }
+.badge-sending { background: var(--blue-dim); color: var(--blue); border-color: rgba(74,143,231,0.22); }
+.badge-ok      { background: var(--green-dim); color: var(--green); border-color: rgba(52,199,89,0.22); }
+.badge-err     { background: var(--amber-dim); color: var(--amber); border-color: rgba(255,149,0,0.22); }
+.badge-warn    { background: var(--red-dim); color: var(--red); border-color: rgba(255,59,48,0.22); }
+
+/* Emergency contacts panel */
+.contacts-panel {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.contact-slot {
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  margin-bottom: 8px;
+  transition: border-color .2s;
+}
+
+.contact-slot.filled { border-color: rgba(52,199,89,0.2); background: rgba(52,199,89,0.03); }
+.contact-slot.empty  { border-style: dashed; }
+
+.slot-label {
+  font-size: 9px;
+  color: var(--text3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+}
+
+.slot-required { font-size: 9px; color: var(--red); }
+.slot-optional { font-size: 9px; color: var(--text3); }
+
+.contact-info { display: flex; align-items: center; gap: 9px; }
+
+.contact-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--bg4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.contact-avatar.set { background: rgba(52,199,89,0.12); color: var(--green); }
+
+.contact-name  { font-size: 12px; font-weight: 700; color: var(--text); }
+.contact-phone { font-size: 10px; color: var(--text2); font-family: var(--mono); }
+.contact-rel   { font-size: 10px; color: var(--text3); }
+
+.slot-actions { display: flex; gap: 5px; margin-top: 8px; }
+
+.slot-btn {
+  flex: 1;
+  padding: 6px;
+  font-size: 10px;
+  border: 0.5px solid var(--border2);
+  border-radius: 7px;
+  background: var(--bg4);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background .14s;
+  font-family: var(--font);
+  font-weight: 600;
+}
+
+.slot-btn:hover { background: var(--bg); color: var(--text); }
+.slot-btn.danger { border-color: rgba(255,59,48,0.18); color: #ff7068; }
+.slot-btn.danger:hover { background: var(--red-dim); }
+
+.empty-slot-hint { font-size: 11px; color: var(--text3); text-align: center; padding: 4px 0; }
+
+.validation-banner {
+  background: var(--red-dim);
+  border: 0.5px solid rgba(255,59,48,0.22);
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 10px;
+  color: #ff7068;
+  display: none;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  line-height: 1.6;
+}
+
+.validation-banner.show { display: block; }
+
+/* Contact form modal */
+.form-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+  backdrop-filter: blur(8px);
+}
+
+.form-backdrop.show { opacity: 1; pointer-events: all; }
+
+.form-card {
+  background: #13151f;
+  border: 0.5px solid var(--border2);
+  border-radius: 20px;
+  padding: 26px 22px;
+  width: 340px;
+  box-shadow: 0 28px 70px rgba(0,0,0,0.8);
+  animation: fadeUp .25s ease;
+}
+
+.form-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
+.form-sub   { font-size: 11px; color: var(--text2); margin-bottom: 20px; font-family: var(--mono); line-height: 1.6; }
+
+.form-field { margin-bottom: 14px; }
+
+.form-label {
+  font-size: 10px;
+  color: var(--text2);
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.form-label .req { color: var(--red); }
+
+.form-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 0.5px solid var(--border2);
+  border-radius: 9px;
+  padding: 10px 13px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .2s;
+}
+
+.form-input:focus  { border-color: rgba(74,143,231,0.45); }
+.form-input.invalid { border-color: rgba(255,59,48,0.5); }
+.form-input::placeholder { color: var(--text3); }
+
+.form-select {
+  width: 100%;
+  background: var(--bg3);
+  border: 0.5px solid var(--border2);
+  border-radius: 9px;
+  padding: 10px 13px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  cursor: pointer;
+}
+
+.form-error {
+  font-size: 10px;
+  color: var(--red);
+  margin-top: 4px;
+  display: none;
+  font-family: var(--mono);
+}
+
+.form-error.show { display: block; }
+
+.form-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+.form-save {
+  flex: 1;
+  padding: 11px;
+  background: var(--blue);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: opacity .15s;
+  box-shadow: 0 4px 16px rgba(74,143,231,0.3);
+}
+
+.form-save:hover { opacity: 0.88; }
+
+.form-cancel-btn {
+  padding: 11px 16px;
+  background: var(--bg4);
+  border: 0.5px solid var(--border2);
+  border-radius: 9px;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+}
+
+.form-cancel-btn:hover { color: var(--text); }
+
+.phone-hint {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 4px;
+  font-family: var(--mono);
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════
+   BACKEND COLUMN
+══════════════════════════════ */
+.be-col { display: flex; flex-direction: column; gap: 10px; }
+
+.be-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+
+.be-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+
+.http-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  animation: logSlide .2s ease;
+}
+
+.http-method { font-weight: 700; color: var(--blue); }
+.http-path   { color: var(--text); }
+.http-ok     { color: var(--green); font-weight: 700; }
+.http-err    { color: var(--red); font-weight: 700; }
+.http-ms     { color: var(--text3); font-size: 10px; margin-left: auto; }
+
+.req-json {
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--text2);
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  overflow: hidden;
+  border: 0.5px solid var(--border);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.svc-log {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 68px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.log-row {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text2);
+  animation: logSlide .18s ease;
+  line-height: 1.7;
+}
+
+.log-ok   { color: #4ad97a; }
+.log-info { color: #6da6f0; }
+.log-err  { color: #ff7068; }
+.log-warn { color: var(--amber); }
+
+/* Twilio per-contact rows */
+.twilio-contact-row {
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 11px;
+  margin-bottom: 7px;
+  background: var(--bg3);
+}
+.twilio-contact-row:last-child { margin-bottom: 0; }
+
+.twilio-contact-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.twilio-channels { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.twilio-ch { text-align: center; }
+.twilio-ch-lbl { font-size: 9px; color: var(--text3); margin-bottom: 3px; font-family: var(--mono); }
+.twilio-sid { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 3px; word-break: break-all; line-height: 1.4; }
+
+/* WhatsApp Preview */
+.wa-preview {
+  background: #0b141a;
+  border-radius: 10px;
+  padding: 11px;
+  border: 0.5px solid rgba(37,211,102,0.1);
+}
+
+.wa-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 9px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.05);
+  margin-bottom: 9px;
+}
+
+.wa-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: #1f2c34;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.wa-name { font-size: 12px; font-weight: 700; color: #e9edef; }
+.wa-sub  { font-size: 10px; color: rgba(233,237,239,0.4); font-family: var(--mono); }
+
+.wa-bubble {
+  background: #1f2c34;
+  border-radius: 8px 8px 8px 2px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #e9edef;
+  line-height: 1.8;
+  animation: msgPop .35s ease;
+  border: 0.5px solid rgba(255,255,255,0.04);
+  font-family: var(--mono);
+}
+
+.wa-bubble b { color: #fff; font-weight: 700; }
+.wa-bubble a { color: #53bdeb; text-decoration: none; }
+.wa-bubble i { color: rgba(233,237,239,0.4); }
+
+.wa-time {
+  font-size: 10px;
+  color: rgba(233,237,239,0.3);
+  text-align: right;
+  margin-top: 5px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 3px;
+  font-family: var(--mono);
+}
+
+.wa-checks { color: #4fc3f7; }
+
+/* Message tabs */
+.msg-tabs {
+  display: flex;
+  gap: 1px;
+  margin-bottom: 10px;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.msg-tab {
+  flex: 1;
+  text-align: center;
+  padding: 5px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: background .15s, color .15s;
+  font-family: var(--font);
+  border: none;
+  background: transparent;
+  font-weight: 600;
+}
+
+.msg-tab.active { background: var(--bg2); color: var(--text); }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+/* ══ ANIMATIONS ══ */
+@keyframes sosPulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes ringGrow  { 0%{transform:scale(1);opacity:.5} 100%{transform:scale(1.85);opacity:0} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes mapFloat  { 0%,100%{transform:translate(-50%,-50%)} 50%{transform:translate(-50%,calc(-50% - 5px))} }
+@keyframes accPulse  { 0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)} 50%{opacity:.2;transform:translate(-50%,-50%) scale(1.18)} }
+@keyframes accPulse2 { 0%,100%{opacity:.4;transform:translate(-50%,-50%) scale(1)} 50%{opacity:.1;transform:translate(-50%,-50%) scale(1.12)} }
+@keyframes tripBlink { 0%,100%{opacity:1} 50%{opacity:.35} }
+@keyframes fadeUp    { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+@keyframes countPop  { 0%{transform:scale(1.3)} 100%{transform:scale(1)} }
+@keyframes logSlide  { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:none} }
+@keyframes msgPop    { from{opacity:0;transform:scale(.95) translateY(6px)} to{opacity:1;transform:none} }
+@keyframes shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px)} 40%{transform:translateX(10px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+
+/* ── Off-Route Notification Slide-Up Card ── */
+.offroute-notif {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(8,10,15,0.97) 16%);
+  padding: 18px 14px 22px;
+  z-index: 400;
+  transform: translateY(100%);
+  transition: transform .38s cubic-bezier(.32,1.2,.48,1);
+}
+.offroute-notif.show { transform: translateY(0); }
+
+.or-card {
+  background: #1a1420;
+  border: 1px solid rgba(255,149,0,0.28);
+  border-radius: 16px;
+  padding: 13px 14px 14px;
+  box-shadow: 0 -8px 32px rgba(255,149,0,0.1), 0 4px 20px rgba(0,0,0,0.7);
+}
+
+.or-header { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+
+.or-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,149,0,0.14);
+  border: 1px solid rgba(255,149,0,0.28);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+  animation: orIconPulse 1.1s ease-in-out infinite;
+}
+@keyframes orIconPulse {
+  0%,100%{ box-shadow:0 0 0 0 rgba(255,149,0,0.3); }
+  50%    { box-shadow:0 0 0 6px rgba(255,149,0,0); }
+}
+
+.or-title { font-size: 13px; font-weight: 800; color: var(--amber); letter-spacing: -.2px; }
+.or-body  { font-size: 10px; color: rgba(255,255,255,.45); font-family:var(--mono); line-height:1.65; margin-bottom:10px; }
+
+.or-countdown-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,59,48,.08);
+  border: 0.5px solid rgba(255,59,48,.2);
+  border-radius: 10px;
+  padding: 8px 11px;
+  margin-bottom: 10px;
+}
+.or-cd-num {
+  font-size: 26px; font-weight: 800;
+  color: var(--red); font-family:var(--mono);
+  min-width: 26px; text-align:center;
+}
+.or-cd-num.pop { animation: orNumPop .22s ease; }
+@keyframes orNumPop { 0%{transform:scale(1.4)} 100%{transform:scale(1)} }
+
+.or-cd-bar-wrap { flex:1; }
+.or-cd-label { font-size:9px; color:var(--red); font-family:var(--mono); margin-bottom:4px; letter-spacing:.3px; }
+.or-cd-track { height:3px; background:rgba(255,59,48,.15); border-radius:2px; overflow:hidden; }
+.or-cd-fill  { height:100%; background:var(--red); border-radius:2px; transition:width .1s linear; }
+
+.or-actions { display:flex; gap:7px; }
+.or-dismiss {
+  flex:1; padding:8px;
+  background:rgba(255,255,255,.07);
+  border:0.5px solid rgba(255,255,255,.09);
+  border-radius:9px; color:rgba(255,255,255,.65);
+  font-size:11px; font-weight:700; cursor:pointer;
+  font-family:var(--font); transition:background .14s;
+}
+.or-dismiss:hover { background:rgba(255,255,255,.12); }
+.or-sos-now {
+  flex:1; padding:8px;
+  background:var(--red); border:none;
+  border-radius:9px; color:#fff;
+  font-size:11px; font-weight:800; cursor:pointer;
+  font-family:var(--font);
+  box-shadow:0 3px 14px rgba(255,59,48,.35);
+  transition:opacity .14s;
+}
+.or-sos-now:hover { opacity:.88; }
+
+/* Phone vibrate */
+@keyframes vibrate {
+  0%,100%{ transform:rotate(0) translateX(0); }
+  10%  { transform:rotate(-1.5deg) translateX(-3px); }
+  20%  { transform:rotate(1.5deg)  translateX(3px); }
+  30%  { transform:rotate(-1.5deg) translateX(-3px); }
+  40%  { transform:rotate(1.5deg)  translateX(3px); }
+  50%  { transform:rotate(-1deg)   translateX(-2px); }
+  60%  { transform:rotate(1deg)    translateX(2px); }
+  70%  { transform:rotate(-1deg)   translateX(-2px); }
+  80%  { transform:rotate(.5deg)   translateX(1px); }
+  90%  { transform:rotate(-.5deg)  translateX(-1px); }
+}
+.phone-wrap.vibrating { animation:vibrate .55s ease-in-out; }
+
+@media (max-width: 980px) {
+  main { grid-template-columns: 1fr; }
+  .phone-col { position: static; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">T</div>
+    <div>
+      <div class="logo-text">TransIQ</div>
+      <div class="logo-sub">Jamaica AI Transport Safety</div>
+    </div>
+  </div>
+  <div class="header-badges">
+    <span class="hbadge">React Native</span>
+    <span class="hbadge">Spring Boot</span>
+    <span class="hbadge">Twilio 9.14</span>
+    <span class="hbadge live">● Full Stack Demo</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ══ PHONE ══ -->
+<div class="phone-col">
+  <div class="phone-wrap" id="phone-wrap">
+    <div class="side-btn" id="sv-up" style="top:100px;height:28px" onclick="doVolUp()"></div>
+    <div class="side-btn" id="sv-d1" style="top:134px;height:26px" onclick="doVolDown()"></div>
+    <div class="side-btn" id="sv-d2" style="top:165px;height:26px" onclick="doVolDown()"></div>
+
+    <div class="screen" id="screen">
+      <!-- MAP -->
+      <div class="map-bg">
+        <div class="map-grid"></div>
+        <div class="map-road lit"  style="left:0;right:0;top:38%;height:22px;transform:rotate(-2deg)"></div>
+        <div class="map-road"      style="left:0;right:0;top:60%;height:12px;transform:rotate(1.8deg)"></div>
+        <div class="map-road"      style="left:20%;top:0;bottom:0;width:14px;transform:rotate(0.6deg)"></div>
+        <div class="map-road"      style="left:66%;top:0;bottom:0;width:9px;transform:rotate(-1.2deg)"></div>
+        <div class="map-block"     style="left:28%;top:16%;width:52px;height:34px"></div>
+        <div class="map-block"     style="left:53%;top:62%;width:44px;height:30px"></div>
+        <div class="map-block"     style="left:70%;top:20%;width:36px;height:46px"></div>
+        <div class="route-line"    style="left:0;right:0;top:calc(38% + 5px);height:3px;transform:rotate(-2deg)"></div>
+      </div>
+
+      <div class="acc-ring-2"></div>
+      <div class="acc-ring"></div>
+      <div class="loc-pin">📍</div>
+
+      <!-- Off-route top warning bar (flashes briefly on detection) -->
+      <div class="offroute-bar" id="offroute-bar">⚠ Off-route detected — 180m from planned path</div>
+
+      <!-- Off-route slide-up notification card -->
+      <div class="offroute-notif" id="or-notif">
+        <div class="or-card">
+          <div class="or-header">
+            <div class="or-icon">📍</div>
+            <div>
+              <div class="or-title">You're going off-route</div>
+            </div>
+          </div>
+          <div class="or-body" id="or-body-text">You have deviated 180m from your planned route to <b style="color:rgba(255,255,255,.7)">Portmore</b>.<br>If this was unintentional, SOS will be sent automatically.</div>
+          <div class="or-countdown-row">
+            <div class="or-cd-num" id="or-cd-num">5</div>
+            <div class="or-cd-bar-wrap">
+              <div class="or-cd-label">AUTO-SOS IN</div>
+              <div class="or-cd-track"><div class="or-cd-fill" id="or-cd-fill" style="width:100%"></div></div>
+            </div>
+          </div>
+          <div class="or-actions">
+            <button class="or-dismiss" onclick="dismissOffRoute()">I'm OK — Dismiss</button>
+            <button class="or-sos-now" onclick="sosNow()">SOS Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span class="s-time" id="clock">9:41</span>
+        <div class="s-icons"><span>●●●</span><span style="font-size:9px">WiFi</span><span>🔋</span></div>
+      </div>
+
+      <div class="trip-pill">
+        <div class="trip-dot"></div>
+        <span class="trip-text">Trip Active · TransIQ</span>
+      </div>
+
+      <!-- LOCKED pill -->
+      <div class="sos-locked-overlay" id="locked-overlay">
+        <div class="sos-locked-pill">⚠ Add emergency contact to arm SOS</div>
+      </div>
+
+      <div class="hint-box" id="hint-box" style="opacity:0">
+        <div class="hint-line">Hold 1.5s · Shake</div>
+        <div class="hint-line">Vol − × 3</div>
+      </div>
+
+      <!-- SOS -->
+      <div class="sos-wrap">
+        <div class="sos-ring locked" id="sos-ring"></div>
+        <svg class="sos-arc" viewBox="0 0 82 82">
+          <circle id="arc" cx="41" cy="41" r="38" fill="none" stroke="#FF3B30" stroke-width="3"
+            stroke-linecap="round" stroke-dasharray="239" stroke-dashoffset="239"
+            style="transition:stroke-dashoffset .05s linear;opacity:.9"/>
+        </svg>
+        <button class="sos-btn locked" id="sos-btn"
+          onmousedown="startHold()" onmouseup="endHold()" onmouseleave="endHold()"
+          ontouchstart="startHold(event)" ontouchend="endHold()">SOS</button>
+      </div>
+
+      <!-- COUNTDOWN modal -->
+      <div class="m-overlay" id="m-cd">
+        <div class="m-card">
+          <div class="m-title">🚨 SOS Sending in</div>
+          <div class="m-num" id="cd-num">5</div>
+          <div class="m-sub" id="cd-sub">Fetching your GPS location…</div>
+          <button class="m-cancel" onclick="cancelSOS()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- SENT modal -->
+      <div class="m-overlay" id="m-sent">
+        <div class="m-card c-sent">
+          <span class="m-icon">✅</span>
+          <div class="m-ttl">SOS Sent</div>
+          <div class="m-body" id="sent-body">Your location has been shared.<br>Help is on the way.</div>
+        </div>
+      </div>
+
+      <!-- ERROR modal -->
+      <div class="m-overlay" id="m-err">
+        <div class="m-card c-err">
+          <span class="m-icon">⚠️</span>
+          <div class="m-ttl">SOS Failed</div>
+          <div class="m-body">Could not send your location.<br>Please call 119 directly.</div>
+        </div>
+      </div>
+    </div><!-- /screen -->
+  </div><!-- /phone-wrap -->
+
+  <!-- Keyboard hints -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center">
+    <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">Keys:</span>
+    <span class="kbd">Space</span><span style="font-size:10px;color:var(--text3)">hold</span>
+    <span class="kbd">S</span><span style="font-size:10px;color:var(--text3)">shake</span>
+    <span class="kbd">D</span><span style="font-size:10px;color:var(--text3)">vol−</span>
+    <span class="kbd">O</span><span style="font-size:10px;color:var(--text3)">off-route</span>
+  </div>
+</div>
+
+<!-- ══ CONTROLS ══ -->
+<div class="ctrl-col">
+
+  <!-- Emergency Contacts -->
+  <div class="contacts-panel">
+    <div class="sec-title" style="margin-bottom:6px">Emergency contacts</div>
+
+    <div class="validation-banner" id="val-banner">
+      ⚠ At least 1 emergency contact is required before SOS can be triggered.
+    </div>
+
+    <div class="contact-slot empty" id="slot-0">
+      <div class="slot-label">Contact 1 <span class="slot-required">Required</span></div>
+      <div class="empty-slot-hint">No contact added</div>
+      <div class="slot-actions">
+        <button class="slot-btn" onclick="openForm(0)">+ Add contact</button>
+      </div>
+    </div>
+
+    <div class="contact-slot empty" id="slot-1">
+      <div class="slot-label">Contact 2 <span class="slot-optional">Optional</span></div>
+      <div class="empty-slot-hint">No contact added</div>
+      <div class="slot-actions">
+        <button class="slot-btn" onclick="openForm(1)">+ Add contact</button>
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.7;font-family:var(--mono)">
+      Both contacts receive SMS + WhatsApp simultaneously.
+    </div>
+  </div>
+
+  <!-- Hold -->
+  <div class="ctrl-card">
+    <div class="sec-title">Hold button</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+      <span style="font-size:11px;color:var(--text2)">1.5s press — SOSButton.tsx</span>
+      <span class="kbd">Space</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div class="bar-track"><div class="bar-fill" id="hold-bar" style="width:0%;background:var(--red)"></div></div>
+      <span style="font-size:10px;color:var(--text3);min-width:42px;font-family:var(--mono)" id="hold-lbl">0 / 1.5s</span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">click &amp; hold SOS →</div>
+  </div>
+
+  <!-- Shake -->
+  <div class="ctrl-card">
+    <div class="sec-title">Shake — useShakeSOS</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+      <div style="display:flex;gap:5px;align-items:center">
+        <div class="dot" id="sd0"></div>
+        <div class="dot" id="sd1"></div>
+        <div class="dot" id="sd2"></div>
+        <span style="font-size:10px;color:var(--text3);margin-left:3px;font-family:var(--mono)">3× in 1.5s · 500ms debounce</span>
+      </div>
+      <span class="kbd">S</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div class="bar-track"><div class="bar-fill" id="shake-bar" style="width:0%;background:var(--red)"></div></div>
+      <span style="font-size:10px;color:var(--text3);min-width:28px;font-family:var(--mono)" id="shake-lbl">—</span>
+    </div>
+    <button class="c-btn red" id="shake-btn" onclick="doShake()">📳 Shake device</button>
+  </div>
+
+  <!-- Volume -->
+  <div class="ctrl-card">
+    <div class="sec-title">Volume — useVolumeButtonSOS</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+      <div style="display:flex;gap:5px;align-items:center">
+        <div class="dot" id="vd0"></div>
+        <div class="dot" id="vd1"></div>
+        <div class="dot" id="vd2"></div>
+        <span style="font-size:10px;color:var(--text3);margin-left:3px;font-family:var(--mono)">3× vol− in 2s</span>
+      </div>
+      <span class="kbd">D</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div class="bar-track"><div class="bar-fill" id="vol-bar" style="width:0%;background:var(--blue)"></div></div>
+      <span style="font-size:10px;color:var(--text3);min-width:28px;font-family:var(--mono)" id="vol-lbl">—</span>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="c-btn blue" onclick="doVolDown()">🔉 Vol −</button>
+      <button class="c-btn" onclick="doVolUp()">🔊 Vol +</button>
+    </div>
+  </div>
+
+  <!-- Off-route Detection -->
+  <div class="ctrl-card">
+    <div class="sec-title">Off-Route Detection — useOffRoute</div>
+    <div style="font-size:10px;color:var(--text2);margin-bottom:10px;font-family:var(--mono);line-height:1.7">
+      GPS detects deviation → push notification → 5s auto-SOS countdown → phone vibrates
+    </div>
+    <div style="display:flex;gap:7px;margin-bottom:7px">
+      <button class="c-btn" id="offroute-btn" onclick="triggerOffRoute('deviation')" style="border-color:rgba(255,149,0,0.25);color:var(--amber);flex:1">
+        <span class="kbd" style="margin-right:5px">O</span>Off-route deviation
+      </button>
+    </div>
+    <button class="c-btn" onclick="triggerOffRoute('destination')" style="border-color:rgba(255,149,0,0.25);color:var(--amber);width:100%">
+      Passed final destination
+    </button>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono)">Dismiss within 5s to cancel · contacts notified if no action</div>
+  </div>
+
+  <!-- State + Reset -->
+  <div style="display:flex;gap:8px">
+    <div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:10px 12px">
+      <div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-family:var(--mono);letter-spacing:.8px;text-transform:uppercase">sosState</div>
+      <span class="badge badge-idle" id="state-badge">idle</span>
+    </div>
+    <button class="c-btn grn" style="flex:1" onclick="resetAll()">↺ Reset</button>
+  </div>
+</div>
+
+<!-- ══ BACKEND ══ -->
+<div class="be-col">
+
+  <!-- API endpoint -->
+  <div class="be-card">
+    <div class="be-title">SafetyController — POST /api/safety/sos</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span class="badge badge-idle" id="api-badge">● Idle</span>
+      <span style="font-size:10px;color:var(--text3);font-family:var(--mono)" id="api-ms"></span>
+    </div>
+    <div id="http-trace" style="min-height:16px;margin-bottom:8px"></div>
+    <div id="req-wrap" style="display:none">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-family:var(--mono)">SOSRequest body</div>
+      <pre class="req-json" id="req-json"></pre>
+    </div>
+  </div>
+
+  <!-- SafetyService log -->
+  <div class="be-card">
+    <div class="be-title">SafetyService log</div>
+    <div class="svc-log" id="svc-log">
+      <div class="log-row" style="color:var(--text3)">— add a contact to arm SOS —</div>
+    </div>
+  </div>
+
+  <!-- Twilio -->
+  <div class="be-card">
+    <div class="be-title">TwilioNotificationService — sendBoth() per contact</div>
+    <div id="twilio-contacts">
+      <div style="font-size:11px;color:var(--text3);padding:6px 0;font-family:var(--mono)">No contacts stored yet.</div>
+    </div>
+  </div>
+
+  <!-- Message preview -->
+  <div class="be-card" id="msg-card" style="display:none">
+    <div class="be-title">Message preview</div>
+    <div id="msg-tabs-row" class="msg-tabs"></div>
+    <div id="msg-preview-area"></div>
+  </div>
+
+</div>
+</main>
+
+<!-- CONTACT FORM MODAL -->
+<div class="form-backdrop" id="form-backdrop" onclick="closeFormIfBackdrop(event)">
+  <div class="form-card">
+    <div class="form-title" id="form-title">Add Emergency Contact</div>
+    <div class="form-sub" id="form-sub">This person will receive an SOS alert with your location.</div>
+
+    <div class="form-field">
+      <div class="form-label">Full name <span class="req">*</span></div>
+      <input class="form-input" id="f-name" type="text" placeholder="e.g. Paulette Reid" autocomplete="off"/>
+      <div class="form-error" id="e-name">Please enter a full name.</div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-label">Phone number <span class="req">*</span></div>
+      <input class="form-input" id="f-phone" type="tel" placeholder="+18765551234" autocomplete="off"/>
+      <div class="phone-hint">Jamaica: +1876XXXXXXX &nbsp;|&nbsp; International: +[country][number]</div>
+      <div class="form-error" id="e-phone">Enter a valid phone number (e.g. +18765551234)</div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-label">Relationship</div>
+      <select class="form-select" id="f-rel">
+        <option value="">Select relationship…</option>
+        <option value="Mother">Mother</option>
+        <option value="Father">Father</option>
+        <option value="Sister">Sister</option>
+        <option value="Brother">Brother</option>
+        <option value="Partner">Partner</option>
+        <option value="Spouse">Spouse</option>
+        <option value="Friend">Friend</option>
+        <option value="Coworker">Coworker</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button class="form-cancel-btn" onclick="closeForm()">Cancel</button>
+      <button class="form-save" onclick="saveContact()">Save contact</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const CFG  = { twilioPhone: '+1 771 249 9912', twilioWA: '+1 415 523 8886' };
+const USER = { name: 'Marcus Reid', userId: 'user-abc-123', tripId: 'trip-xyz-456' };
+const GPS  = {
+  lat: (17.9970 + (Math.random() - .5) * .012).toFixed(6),
+  lng: (-76.7936 + (Math.random() - .5) * .012).toFixed(6),
+};
+
+// ════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════
+const HOLD_MS   = 1500;
+const SHAKE_WIN = 1500;
+const SHAKE_DEB = 500;
+const SHAKE_REQ = 3;
+const VOL_WIN   = 2000;
+const VOL_REQ   = 3;
+const COOLDOWN  = 5000;
+const CD_SECS   = 5;
+
+// ════════════════════════════════════════
+// EMERGENCY CONTACTS
+// ════════════════════════════════════════
+let contacts    = [null, null];
+let editingSlot = -1;
+
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().substr(0, 2);
+}
+
+function isValidPhone(p) {
+  return /^\+[1-9]\d{6,14}$/.test(p.replace(/\s/g, ''));
+}
+
+function renderContactSlots() {
+  for (let i = 0; i < 2; i++) {
+    const slot = document.getElementById('slot-' + i);
+    const c    = contacts[i];
+    const label = i === 0
+      ? `Contact 1 <span class="slot-required">Required</span>`
+      : `Contact 2 <span class="slot-optional">Optional</span>`;
+
+    if (c) {
+      slot.className = 'contact-slot filled';
+      slot.innerHTML = `
+        <div class="slot-label">${label}</div>
+        <div class="contact-info">
+          <div class="contact-avatar set">${getInitials(c.name)}</div>
+          <div>
+            <div class="contact-name">${c.name}</div>
+            <div class="contact-phone">${c.phone}</div>
+            ${c.relationship ? `<div class="contact-rel">${c.relationship}</div>` : ''}
+          </div>
+        </div>
+        <div class="slot-actions">
+          <button class="slot-btn" onclick="openForm(${i})">Edit</button>
+          <button class="slot-btn danger" onclick="removeContact(${i})">Remove</button>
+        </div>`;
+    } else {
+      slot.className = 'contact-slot empty';
+      slot.innerHTML = `
+        <div class="slot-label">${label}</div>
+        <div class="empty-slot-hint">No contact added</div>
+        <div class="slot-actions">
+          <button class="slot-btn" onclick="openForm(${i})">+ Add contact</button>
+        </div>`;
+    }
+  }
+  updateSOSArmed();
+  updateTwilioPanel();
+}
+
+function removeContact(i) {
+  contacts[i] = null;
+  renderContactSlots();
+}
+
+function updateSOSArmed() {
+  const armed  = contacts[0] !== null;
+  const btn    = document.getElementById('sos-btn');
+  const ring   = document.getElementById('sos-ring');
+  const lock   = document.getElementById('locked-overlay');
+  const hint   = document.getElementById('hint-box');
+  const val    = document.getElementById('val-banner');
+
+  if (armed) {
+    if (btn.classList.contains('locked')) {
+      btn.className  = 'sos-btn idle';
+      ring.className = 'sos-ring idle';
+    }
+    lock.style.display = 'none';
+    hint.style.opacity = '1';
+    val.classList.remove('show');
+    svcLog('[SafetyService] Emergency contacts updated ✓', 'log-ok');
+    svcLog(`[SafetyService] ${contacts.filter(Boolean).length} contact(s) on file`, 'log-info');
+  } else {
+    btn.className  = 'sos-btn locked';
+    ring.className = 'sos-ring locked';
+    lock.style.display = 'flex';
+    hint.style.opacity = '0';
+  }
+}
+
+function updateTwilioPanel() {
+  const el     = document.getElementById('twilio-contacts');
+  const active = contacts.filter(Boolean);
+
+  if (active.length === 0) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 0;font-family:var(--mono)">No contacts stored yet.</div>';
+    return;
+  }
+
+  el.innerHTML = active.map((c, i) => `
+    <div class="twilio-contact-row" id="tc-${i}">
+      <div class="twilio-contact-name">
+        <div style="width:20px;height:20px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--text2);font-family:var(--font)">${getInitials(c.name)}</div>
+        ${c.name} &nbsp;<span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${c.phone}</span>
+      </div>
+      <div class="twilio-channels">
+        <div class="twilio-ch">
+          <div class="twilio-ch-lbl">SMS</div>
+          <span class="badge badge-idle" id="sms-badge-${i}" style="width:100%;justify-content:center">● Idle</span>
+          <div class="twilio-sid" id="sms-sid-${i}"></div>
+        </div>
+        <div class="twilio-ch">
+          <div class="twilio-ch-lbl">WhatsApp</div>
+          <span class="badge badge-idle" id="wa-badge-${i}" style="width:100%;justify-content:center">● Idle</span>
+          <div class="twilio-sid" id="wa-sid-${i}"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════
+// CONTACT FORM
+// ════════════════════════════════════════
+function openForm(slot) {
+  editingSlot = slot;
+  const c = contacts[slot];
+  document.getElementById('form-title').textContent = c ? 'Edit Emergency Contact' : 'Add Emergency Contact';
+  document.getElementById('form-sub').textContent   = slot === 0
+    ? 'Primary contact — required to arm SOS.'
+    : 'Secondary contact — optional, receives same alert simultaneously.';
+  document.getElementById('f-name').value  = c ? c.name  : '';
+  document.getElementById('f-phone').value = c ? c.phone : '';
+  document.getElementById('f-rel').value   = c ? c.relationship : '';
+  ['f-name','f-phone'].forEach(id => document.getElementById(id).classList.remove('invalid'));
+  ['e-name','e-phone'].forEach(id => document.getElementById(id).classList.remove('show'));
+  document.getElementById('form-backdrop').classList.add('show');
+  setTimeout(() => document.getElementById('f-name').focus(), 100);
+}
+
+function closeForm() {
+  document.getElementById('form-backdrop').classList.remove('show');
+}
+
+function closeFormIfBackdrop(e) {
+  if (e.target === document.getElementById('form-backdrop')) closeForm();
+}
+
+function saveContact() {
+  const name  = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim().replace(/\s/g, '');
+  const rel   = document.getElementById('f-rel').value;
+  let valid   = true;
+
+  if (!name) {
+    document.getElementById('f-name').classList.add('invalid');
+    document.getElementById('e-name').classList.add('show');
+    valid = false;
+  } else {
+    document.getElementById('f-name').classList.remove('invalid');
+    document.getElementById('e-name').classList.remove('show');
+  }
+
+  if (!isValidPhone(phone)) {
+    document.getElementById('f-phone').classList.add('invalid');
+    document.getElementById('e-phone').classList.add('show');
+    valid = false;
+  } else {
+    document.getElementById('f-phone').classList.remove('invalid');
+    document.getElementById('e-phone').classList.remove('show');
+  }
+
+  if (!valid) return;
+
+  contacts[editingSlot] = { name, phone, relationship: rel };
+  closeForm();
+  renderContactSlots();
+}
+
+// ════════════════════════════════════════
+// OFF-ROUTE DETECTION PIPELINE
+// useOffRoute hook → push notification → 5s auto-SOS → vibrate
+// ════════════════════════════════════════
+let orCdTimer    = null;
+let orCdVal      = 5;
+let orActive     = false;
+
+function vibratePhone() {
+  // Web Vibration API (works on mobile browsers)
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200, 100, 400]);
+  }
+  // Visual vibration on the phone mockup
+  const wrap = document.getElementById('phone-wrap');
+  if (wrap) {
+    wrap.classList.remove('vibrating');
+    void wrap.offsetWidth;
+    wrap.classList.add('vibrating');
+    setTimeout(() => wrap.classList.remove('vibrating'), 600);
+  }
+}
+
+function triggerOffRoute(scenario) {
+  if (orActive) return;   // already running
+  if (sosState !== 'idle') return;
+
+  orActive  = true;
+  orCdVal   = 5;
+
+  // Scenario text
+  const bodyText = scenario === 'destination'
+    ? `You have passed your final destination <b style="color:rgba(255,255,255,.7)">Portmore</b>.<br>If you need help, SOS will be sent automatically.`
+    : `You have deviated 180m from your planned route to <b style="color:rgba(255,255,255,.7)">Portmore</b>.<br>If this was unintentional, SOS will be sent automatically.`;
+
+  const logReason = scenario === 'destination'
+    ? 'Passed final destination: Portmore'
+    : 'Deviation detected: 180m from route';
+
+  document.getElementById('or-body-text').innerHTML = bodyText;
+
+  // Step 1 — show top warning bar briefly
+  const bar = document.getElementById('offroute-bar');
+  bar.textContent = scenario === 'destination'
+    ? '⚠ Passed final destination'
+    : '⚠ Off-route detected — 180m from planned path';
+  bar.style.display = 'block';
+
+  // Step 2 — vibrate immediately on detection
+  vibratePhone();
+
+  // Step 3 — log to backend panel
+  svcLog(`[OffRouteDetector] ${logReason}`, 'log-warn');
+  svcLog('[OffRouteDetector] Sending push notification to user…', 'log-info');
+  svcLog('[OffRouteDetector] Starting 5s auto-SOS countdown…', 'log-warn');
+
+  // Step 4 — slide up notification card after brief delay
+  setTimeout(() => {
+    bar.style.display = 'none';
+    const notif = document.getElementById('or-notif');
+    notif.classList.add('show');
+    startOrCountdown();
+  }, 900);
+}
+
+function startOrCountdown() {
+  const numEl = document.getElementById('or-cd-num');
+  const fill  = document.getElementById('or-cd-fill');
+
+  numEl.textContent = orCdVal;
+  fill.style.width  = '100%';
+
+  // Vibrate every second during countdown
+  vibratePhone();
+
+  orCdTimer = setInterval(() => {
+    orCdVal--;
+
+    // Animate number
+    numEl.classList.remove('pop');
+    void numEl.offsetWidth;
+    numEl.classList.add('pop');
+    numEl.textContent = orCdVal;
+
+    // Update bar
+    fill.style.width = (orCdVal / 5 * 100) + '%';
+
+    // Vibrate on each tick
+    vibratePhone();
+
+    svcLog(`[OffRouteDetector] Auto-SOS in ${orCdVal}s…`, 'log-warn');
+
+    if (orCdVal <= 0) {
+      clearInterval(orCdTimer);
+      // Auto-fire SOS
+      svcLog('[OffRouteDetector] No response — triggering SOS automatically', 'log-err');
+      dismissOffRouteUI();
+      triggerSOS();
+    }
+  }, 1000);
+}
+
+function dismissOffRoute() {
+  clearInterval(orCdTimer);
+  dismissOffRouteUI();
+  svcLog('[OffRouteDetector] User dismissed — SOS cancelled', 'log-ok');
+  svcLog('[OffRouteDetector] Resuming trip monitoring…', 'log-info');
+}
+
+function sosNow() {
+  clearInterval(orCdTimer);
+  dismissOffRouteUI();
+  svcLog('[OffRouteDetector] User tapped SOS Now — immediate trigger', 'log-err');
+  triggerSOS();
+}
+
+function dismissOffRouteUI() {
+  orActive = false;
+  document.getElementById('or-notif').classList.remove('show');
+  document.getElementById('offroute-bar').style.display = 'none';
+  orCdVal = 5;
+  document.getElementById('or-cd-num').textContent = '5';
+  document.getElementById('or-cd-fill').style.width = '100%';
+}
+
+// ════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ════════════════════════════════════════
+// SOS STATE MACHINE
+// ════════════════════════════════════════
+let sosState   = 'idle';
+let shakeTs = [], volTs = [], lastShake = 0, lastVol = 0.6;
+let firedShake = false, firedVol = false;
+let holdFired = false, holdStart = null, holdAF = null;
+let cdVal = CD_SECS, cdTimer = null;
+let winTimers = {};
+
+function showModal(w) {
+  ['cd','sent','err'].forEach(m =>
+    document.getElementById('m-'+m).classList.toggle('show', m === w)
+  );
+}
+
+function setSOSBtn(s) {
+  if (s === 'idle' && contacts[0] === null) return;
+  const btn  = document.getElementById('sos-btn');
+  const ring = document.getElementById('sos-ring');
+  btn.className  = 'sos-btn ' + s;
+  ring.className = 'sos-ring' + (s === 'idle' ? ' idle' : '');
+  btn.textContent = s === 'sending' ? '···' : s === 'sent' ? '✓' : s === 'error' ? '!' : 'SOS';
+  document.getElementById('hint-box').style.opacity = s === 'idle' ? '1' : '0';
+}
+
+function setArc(p) {
+  document.getElementById('arc').setAttribute('stroke-dashoffset', 239 - (239 * p));
+}
+
+function setDots(pre, arr, win) {
+  const n = Date.now(), c = arr.filter(t => n - t <= win).length;
+  for (let i = 0; i < 3; i++)
+    document.getElementById(pre + i).className = 'dot' + (i < c ? ' on' : '');
+}
+
+function flashSide(...ids) {
+  ids.forEach(id => {
+    const e = document.getElementById(id);
+    e.classList.add('flash');
+    setTimeout(() => e.classList.remove('flash'), 200);
+  });
+}
+
+function setBadge(id, type, text) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.className  = 'badge badge-' + type;
+  e.textContent = text;
+}
+
+function updateStateBadge(s) {
+  const map = {
+    idle:      ['idle',    'idle'],
+    countdown: ['sending', 'countdown'],
+    sending:   ['sending', 'sending'],
+    sent:      ['ok',      'sent'],
+    error:     ['err',     'error'],
+  };
+  const [t, l] = map[s] || ['idle', s];
+  setBadge('state-badge', t, l);
+}
+
+function svcLog(msg, cls = '') {
+  const el = document.getElementById('svc-log');
+  const ph = el.querySelector('[style*="text3"]');
+  if (ph) ph.remove();
+  const d = document.createElement('div');
+  d.className  = 'log-row ' + cls;
+  d.textContent = msg;
+  el.prepend(d);
+  if (el.children.length > 20) el.lastChild.remove();
+}
+
+function httpTrace(method, path, status, ms) {
+  const el = document.getElementById('http-trace');
+  el.innerHTML = '';
+  const d = document.createElement('div');
+  d.className  = 'http-row';
+  d.innerHTML  = `<span class="http-method">${method}</span><span class="http-path">${path}</span><span class="${status < 300 ? 'http-ok' : 'http-err'}">${status}</span><span class="http-ms">${ms}ms</span>`;
+  el.appendChild(d);
+}
+
+// ════════════════════════════════════════
+// TRIGGER SOS
+// ════════════════════════════════════════
+function triggerSOS() {
+  if (sosState !== 'idle' || contacts[0] === null) {
+    document.getElementById('val-banner').classList.add('show');
+    return;
+  }
+
+  const active = contacts.filter(Boolean);
+  document.getElementById('cd-sub').textContent =
+    `Notifying ${active.map(c => c.name.split(' ')[0]).join(' & ')}…`;
+
+  sosState = 'countdown';
+  cdVal    = CD_SECS;
+  updateStateBadge('countdown');
+  showModal('cd');
+  const numEl = document.getElementById('cd-num');
+  numEl.textContent = cdVal;
+
+  cdTimer = setInterval(() => {
+    cdVal--;
+    numEl.classList.remove('pop');
+    void numEl.offsetWidth;
+    numEl.classList.add('pop');
+    numEl.textContent = cdVal;
+    if (cdVal <= 0) { clearInterval(cdTimer); sendSOS(); }
+  }, 1000);
+}
+
+function sendSOS() {
+  sosState = 'sending';
+  showModal(null);
+  setSOSBtn('sending');
+  updateStateBadge('sending');
+  const ok = Math.random() > 0.15;
+  simulateBackend(ok);
+
+  setTimeout(() => {
+    sosState = ok ? 'sent' : 'error';
+    setSOSBtn(sosState);
+    if (ok) {
+      const names = contacts.filter(Boolean).map(c => c.name.split(' ')[0]).join(' & ');
+      document.getElementById('sent-body').innerHTML =
+        `Location shared with <b>${names}</b>.<br>Help is on the way.`;
+    }
+    showModal(ok ? 'sent' : 'err');
+    updateStateBadge(sosState);
+    setTimeout(resetAll, ok ? 5500 : 7000);
+  }, 1900);
+}
+
+function cancelSOS() {
+  if (sosState !== 'countdown') return;
+  clearInterval(cdTimer);
+  sosState = 'idle';
+  showModal(null);
+  setSOSBtn('idle');
+  updateStateBadge('idle');
+  firedShake = false; firedVol = false;
+  shakeTs = []; volTs = [];
+  setDots('sd', shakeTs, SHAKE_WIN);
+  setDots('vd', volTs, VOL_WIN);
+  setArc(0);
+  document.getElementById('hold-bar').style.width = '0%';
+  document.getElementById('hold-lbl').textContent = '0 / 1.5s';
+}
+
+function resetAll() {
+  clearInterval(cdTimer);
+  clearInterval(orCdTimer);
+  dismissOffRouteUI();
+  sosState = 'idle';
+  showModal(null);
+  if (contacts[0]) setSOSBtn('idle');
+  updateStateBadge('idle');
+  firedShake = false; firedVol = false; holdFired = false;
+  shakeTs = []; volTs = [];
+  holdStart = null;
+  cancelAnimationFrame(holdAF);
+  setArc(0);
+  ['hold-bar','shake-bar','vol-bar'].forEach(id =>
+    document.getElementById(id).style.width = '0%'
+  );
+  document.getElementById('hold-lbl').textContent  = '0 / 1.5s';
+  document.getElementById('shake-lbl').textContent = '—';
+  document.getElementById('vol-lbl').textContent   = '—';
+  setDots('sd', shakeTs, SHAKE_WIN);
+  setDots('vd', volTs, VOL_WIN);
+  setBadge('api-badge', 'idle', '● Idle');
+  document.getElementById('api-ms').textContent    = '';
+  document.getElementById('http-trace').innerHTML  = '';
+  document.getElementById('req-wrap').style.display = 'none';
+  document.getElementById('msg-card').style.display = 'none';
+  updateTwilioPanel();
+}
+
+// ════════════════════════════════════════
+// BACKEND SIMULATION
+// SafetyController → SafetyService → TwilioNotificationService
+// ════════════════════════════════════════
+function fakeSid() { return 'SM' + Math.random().toString(36).substr(2, 30).toUpperCase(); }
+function fakeMs()  { return 120 + Math.floor(Math.random() * 200); }
+
+function buildAlertMessage(contactName, mapsUrl, localTime) {
+  return `🚨 *TRANSIQ SAFETY ALERT*\n\n` +
+    `*${USER.name}* has triggered an SOS alert.\n\n` +
+    `🕐 *Time:* ${localTime}\n\n` +
+    `📍 *Last known location:*\n${mapsUrl}\n\n` +
+    `🚌 *Active trip ID:* ${USER.tripId}\n\n` +
+    `Please check in with them immediately.\n\n` +
+    `_Sent by TransIQ — Jamaica's AI Transport Safety App_`;
+}
+
+function simulateBackend(ok) {
+  const ms       = fakeMs();
+  const mapsUrl  = `https://www.google.com/maps?q=${GPS.lat},${GPS.lng}`;
+  const now      = new Date();
+  const localTime = now.toLocaleString('en-JM', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+    weekday: 'long', month: 'long', day: 'numeric',
+  });
+  const active = contacts.filter(Boolean);
+
+  setBadge('api-badge', 'sending', '⟳ Dispatching');
+
+  const reqBody = {
+    userId:    USER.userId,
+    tripId:    USER.tripId,
+    latitude:  parseFloat(GPS.lat),
+    longitude: parseFloat(GPS.lng),
+    accuracy:  4.2,
+    timestamp: now.toISOString(),
+  };
+
+  document.getElementById('req-wrap').style.display = 'block';
+  document.getElementById('req-json').textContent   = JSON.stringify(reqBody, null, 2);
+
+  svcLog('[TwilioConfig] Twilio client initialised ✓', 'log-ok');
+  svcLog(`[SafetyController] POST /api/safety/sos received`, 'log-info');
+  svcLog(`[SafetyService] dispatchSOS() → userId: ${USER.userId}`, 'log-info');
+
+  setTimeout(() => {
+    svcLog(`[SafetyService] User found: ${USER.name}`, 'log-ok');
+    svcLog(`[SafetyService] ${active.length} emergency contact(s) on file`, 'log-ok');
+    active.forEach((c, i) =>
+      svcLog(`[SafetyService]   [${i}] ${c.name} · ${c.phone}`, 'log-info')
+    );
+    svcLog(`[SafetyService] Maps link: ${mapsUrl.substr(0,48)}…`, 'log-info');
+    svcLog(`[SafetyService] Time (America/Jamaica): ${localTime}`, 'log-info');
+    active.forEach((c, i) => {
+      setBadge(`sms-badge-${i}`, 'sending', '⟳ Sending');
+      setBadge(`wa-badge-${i}`,  'sending', '⟳ Sending');
+      svcLog(`[TwilioService] sendBoth() → ${c.name} (async CompletableFuture)`, 'log-info');
+    });
+  }, 400);
+
+  setTimeout(() => {
+    if (ok) {
+      httpTrace('POST', '/api/safety/sos', 200, ms);
+      setBadge('api-badge', 'ok', '✓ 200 OK');
+      document.getElementById('api-ms').textContent = ms + 'ms';
+
+      const msgTabs   = [];
+      const msgPanels = [];
+
+      active.forEach((c, i) => {
+        const smsSid = fakeSid(), waSid = fakeSid();
+        setBadge(`sms-badge-${i}`, 'ok', '✓ Sent');
+        setBadge(`wa-badge-${i}`,  'ok', '✓ Sent');
+        document.getElementById(`sms-sid-${i}`).textContent = smsSid.substr(0,18) + '…';
+        document.getElementById(`wa-sid-${i}`).textContent  = waSid.substr(0,18) + '…';
+        svcLog(`[SMS] ✓ ${c.name} · ${c.phone} · ${smsSid.substr(0,12)}…`, 'log-ok');
+        svcLog(`[WhatsApp] ✓ ${c.name} · ${c.phone} · ${waSid.substr(0,12)}…`, 'log-ok');
+
+        const msg    = buildAlertMessage(c.name, mapsUrl, localTime);
+        const waHtml =
+          `🚨 <b>TRANSIQ SAFETY ALERT</b><br><br>` +
+          `<b>${USER.name}</b> has triggered an SOS alert.<br><br>` +
+          `🕐 <b>Time:</b> ${localTime}<br><br>` +
+          `📍 <b>Location:</b><br><a href="${mapsUrl}" target="_blank">${mapsUrl}</a><br><br>` +
+          `🚌 <b>Trip ID:</b> ${USER.tripId}<br><br>` +
+          `Please check in immediately.<br><br>` +
+          `<i>Sent by TransIQ — Jamaica's AI Transport Safety App</i>` +
+          `<div class="wa-time">${now.toLocaleTimeString('en-JM',{hour:'2-digit',minute:'2-digit',hour12:true})} <span class="wa-checks">✓✓</span></div>`;
+
+        const smsText = msg.replace(/\*/g,'').replace(/_/g,'').replace(/\n/g,'<br>');
+
+        msgTabs.push(
+          `<button class="msg-tab${i===0?' active':''}" onclick="switchMsgTab(${i},${active.length})">${c.name.split(' ')[0]}</button>`
+        );
+        msgPanels.push(`
+          <div id="msg-panel-${i}" style="${i>0?'display:none':''}">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:5px;font-family:var(--mono)">
+              <span style="color:var(--wa)">●</span> WhatsApp → ${c.phone}
+            </div>
+            <div class="wa-preview" style="margin-bottom:10px">
+              <div class="wa-header">
+                <div class="wa-avatar">🆘</div>
+                <div>
+                  <div class="wa-name">TransIQ Safety</div>
+                  <div class="wa-sub">${CFG.twilioWA}</div>
+                </div>
+              </div>
+              <div class="wa-bubble">${waHtml}</div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:5px;font-family:var(--mono)">
+              <span style="color:var(--blue)">●</span> SMS → ${c.phone}
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:0.5px solid var(--border)">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-family:var(--mono)">From: ${CFG.twilioPhone}</div>
+              <div style="background:var(--bg4);border-radius:10px 10px 2px 10px;padding:9px 12px;font-size:11px;color:var(--text);line-height:1.8;border:0.5px solid var(--border2);font-family:var(--mono)">${smsText}</div>
+            </div>
+          </div>`);
+      });
+
+      svcLog(`[SafetyService] SOS event persisted to DB ✓`, 'log-ok');
+      svcLog(`[SafetyController] SOSResponse { status: "dispatched" } →  200`, 'log-info');
+
+      document.getElementById('msg-card').style.display           = 'block';
+      document.getElementById('msg-tabs-row').innerHTML           = msgTabs.join('');
+      document.getElementById('msg-preview-area').innerHTML       = msgPanels.join('');
+
+    } else {
+      httpTrace('POST', '/api/safety/sos', 500, ms);
+      setBadge('api-badge', 'err', '✗ 500 Error');
+      active.forEach((c, i) => {
+        setBadge(`sms-badge-${i}`, 'err', '✗ Failed');
+        setBadge(`wa-badge-${i}`,  'err', '✗ Failed');
+      });
+      svcLog(`[TwilioService] FAILED → TwilioRestException: Auth error`, 'log-err');
+      svcLog(`[SafetyService] SOS dispatch failed — contacts NOT notified`, 'log-err');
+    }
+  }, ms + 560);
+}
+
+function switchMsgTab(idx, total) {
+  for (let i = 0; i < total; i++) {
+    const panel = document.getElementById('msg-panel-' + i);
+    const tabs  = document.querySelectorAll('.msg-tab');
+    if (panel) panel.style.display  = i === idx ? 'block' : 'none';
+    if (tabs[i]) tabs[i].classList.toggle('active', i === idx);
+  }
+}
+
+// ════════════════════════════════════════
+// HOLD
+// ════════════════════════════════════════
+function startHold(e) {
+  if (e) e.preventDefault();
+  if (sosState !== 'idle' || contacts[0] === null) {
+    document.getElementById('val-banner').classList.add('show');
+    return;
+  }
+  holdStart = Date.now();
+  holdFired = false;
+  setArc(0);
+
+  (function frame() {
+    const el = Date.now() - holdStart;
+    const p  = Math.min(1, el / HOLD_MS);
+    setArc(p);
+    document.getElementById('hold-bar').style.width  = (p * 100).toFixed(1) + '%';
+    document.getElementById('hold-lbl').textContent  = (el / 1000).toFixed(1) + ' / 1.5s';
+    if (p >= 1 && !holdFired) { holdFired = true; triggerSOS(); return; }
+    if (holdStart !== null) holdAF = requestAnimationFrame(frame);
+  })();
+}
+
+function endHold() {
+  if (holdFired) return;
+  holdStart = null;
+  cancelAnimationFrame(holdAF);
+  setArc(0);
+  document.getElementById('hold-bar').style.width = '0%';
+  document.getElementById('hold-lbl').textContent = '0 / 1.5s';
+}
+
+// ════════════════════════════════════════
+// SHAKE
+// ════════════════════════════════════════
+function animBar(bid, lid, arr, win) {
+  if (winTimers[bid]) clearInterval(winTimers[bid]);
+  const s = Date.now();
+  winTimers[bid] = setInterval(() => {
+    const el = Date.now() - s;
+    const p  = Math.min(100, el / win * 100);
+    document.getElementById(bid).style.width = p + '%';
+    const c = arr.filter(t => Date.now() - t <= win).length;
+    document.getElementById(lid).textContent = c + '/3';
+    if (el >= win) {
+      clearInterval(winTimers[bid]);
+      document.getElementById(bid).style.width = '0%';
+      document.getElementById(lid).textContent = '—';
+    }
+  }, 40);
+}
+
+function doShake() {
+  if (sosState !== 'idle' || firedShake) return;
+  if (contacts[0] === null) {
+    document.getElementById('val-banner').classList.add('show');
+    return;
+  }
+  const n = Date.now();
+  if (n - lastShake <= SHAKE_DEB) return;
+  lastShake = n;
+  shakeTs.push(n);
+  shakeTs = shakeTs.filter(t => n - t <= SHAKE_WIN);
+  animBar('shake-bar', 'shake-lbl', shakeTs, SHAKE_WIN);
+  setDots('sd', shakeTs, SHAKE_WIN);
+  const sc = document.getElementById('screen');
+  sc.style.animation = 'none';
+  void sc.offsetWidth;
+  sc.style.animation = 'shake .36s ease';
+  setTimeout(() => sc.style.animation = '', 400);
+
+  if (shakeTs.length >= SHAKE_REQ && !firedShake) {
+    firedShake = true;
+    shakeTs    = [];
+    setDots('sd', shakeTs, SHAKE_WIN);
+    triggerSOS();
+    setTimeout(() => { firedShake = false; }, COOLDOWN);
+  }
+}
+
+// ════════════════════════════════════════
+// VOLUME
+// ════════════════════════════════════════
+function doVolDown() {
+  if (sosState !== 'idle' || firedVol) return;
+  if (contacts[0] === null) {
+    document.getElementById('val-banner').classList.add('show');
+    return;
+  }
+  const nv = Math.max(0, lastVol - 0.15);
+  if (nv < lastVol) {
+    const n = Date.now();
+    volTs.push(n);
+    volTs = volTs.filter(t => n - t <= VOL_WIN);
+    animBar('vol-bar', 'vol-lbl', volTs, VOL_WIN);
+    setDots('vd', volTs, VOL_WIN);
+    flashSide('sv-d1', 'sv-d2');
+
+    if (volTs.length >= VOL_REQ && !firedVol) {
+      firedVol = true;
+      volTs    = [];
+      setDots('vd', volTs, VOL_WIN);
+      triggerSOS();
+      setTimeout(() => { firedVol = false; }, COOLDOWN);
+    }
+  }
+  lastVol = nv;
+}
+
+function doVolUp() {
+  lastVol = Math.min(1, lastVol + 0.15);
+  flashSide('sv-up');
+}
+
+// ════════════════════════════════════════
+// KEYBOARD
+// ════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.code === 'KeyS') doShake();
+  if (e.code === 'KeyD') doVolDown();
+  if (e.code === 'KeyO') triggerOffRoute('deviation');
+  if (e.code === 'Escape') { closeForm(); cancelSOS(); }
+  if (e.code === 'Space') {
+    e.preventDefault();
+    startHold();
+    document.addEventListener('keyup', function ku(e2) {
+      if (e2.code === 'Space') {
+        endHold();
+        document.removeEventListener('keyup', ku);
+      }
+    });
+  }
+});
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+renderContactSlots();
+</script>
+</body>
+</html>
